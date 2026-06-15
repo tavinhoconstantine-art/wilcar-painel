@@ -112,76 +112,83 @@
         </div>
     </div>
 
+   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
     <script>
-        // CONFIGURAÇÃO DO BANCO (Substitua com as suas chaves do Supabase)
+        // CONFIGURAÇÃO DO BANCO (Coloque seus dados aqui)
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
-        const supabase = window.@supabase.supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-        // IMPORTANTE: Mapeamento para não quebrar seu banco antigo
-        // placa -> placa
-        // modelo -> modelo
-        // sinistro -> unidade
-        // status -> responsavel
-        // detalhes -> pecas
-        // etapa -> coluna do kanban (1 a 5)
+        
+        // Inicialização sem travas
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function carregarDados() {
             if (!supabase) return;
-            const { data, error } = await supabase.from('os_movida').select('*').order('id', { ascending: true });
-            if (error) return console.error(error);
+            try {
+                const { data, error } = await supabase.from('os_movida').select('*').order('id', { ascending: true });
+                if (error) throw error;
 
-            // Limpa as colunas
-            for (let i = 1; i <= 5; i++) document.getElementById(`col-${i}`).innerHTML = '';
-
-            data.forEach(item => {
-                const etapa = item.etapa || 1;
-                const col = document.getElementById(`col-${etapa}`);
-                if (col) {
-                    col.innerHTML += `
-                        <div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
-                            <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="editarOS(${item.id}, '${item.placa}', '${item.modelo}', '${item.sinistro}', '${item.status}', '${item.detalhes}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
-                                <button onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
-                            </div>
-                            <div class="text-xs font-black bg-[#000] text-white px-1.5 py-0.5 inline-block mb-2">${item.placa}</div>
-                            <h4 class="font-black text-sm uppercase">${item.modelo}</h4>
-                            <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">${item.sinistro || 'Não informada'}</span></p>
-                            <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">${item.status || 'Oficina'}</span></p>
-                            <div class="mt-2 pt-2 border-t border-dashed border-black">
-                                <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
-                                <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${item.detalhes || ''}</p>
-                            </div>
-                            
-                            <div class="flex justify-between mt-3 pt-2 border-t border-black">
-                                ${etapa > 1 ? `<button onclick="mudarEtapa(${item.id}, ${etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
-                                ${etapa < 5 ? `<button onclick="mudarEtapa(${item.id}, ${etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
-                            </div>
-                        </div>
-                    `;
+                // Limpa as colunas
+                for (let i = 1; i <= 5; i++) {
+                    const col = document.getElementById(`col-${i}`);
+                    if (col) col.innerHTML = '';
                 }
-            });
+
+                data.forEach(item => {
+                    const etapa = item.etapa || 1;
+                    const col = document.getElementById(`col-${etapa}`);
+                    if (col) {
+                        col.innerHTML += `
+                            <div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
+                                <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="button" onclick="editarOS(${item.id}, '${item.placa}', '${item.modelo}', '${item.sinistro}', '${item.status}', '${item.detalhes}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
+                                    <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
+                                </div>
+                                <div class="text-xs font-black bg-[#000] text-white px-1.5 py-0.5 inline-block mb-2">${item.placa}</div>
+                                <h4 class="font-black text-sm uppercase">${item.modelo}</h4>
+                                <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">${item.sinistro || 'Não informada'}</span></p>
+                                <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">${item.status || 'Oficina'}</span></p>
+                                <div class="mt-2 pt-2 border-t border-dashed border-black">
+                                    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
+                                    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${item.detalhes || ''}</p>
+                                </div>
+                                
+                                <div class="flex justify-between mt-3 pt-2 border-t border-black">
+                                    ${etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
+                                    ${etapa < 5 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+            }
         }
 
         async function salvarOS(e) {
             e.preventDefault();
-            const id = document.getElementById('os-id').value;
-            const payload = {
-                placa: document.getElementById('placa').value,
-                modelo: document.getElementById('modelo').value,
-                sinistro: document.getElementById('unidade').value, // Salva unidade no campo sinistro
-                status: document.getElementById('responsavel').value, // Salva responsavel no campo status
-                detalhes: document.getElementById('pecas').value    // Salva pecas no campo detalhes
-            };
+            try {
+                const id = document.getElementById('os-id').value;
+                const payload = {
+                    placa: document.getElementById('placa').value,
+                    modelo: document.getElementById('modelo').value,
+                    sinistro: document.getElementById('unidade').value, 
+                    status: document.getElementById('responsavel').value, 
+                    detalhes: document.getElementById('pecas').value    
+                };
 
-            if (id) {
-                await supabase.from('os_movida').update(payload).eq('id', id);
-            } else {
-                payload.etapa = 1;
-                await supabase.from('os_movida').insert([payload]);
+                if (id) {
+                    await supabase.from('os_movida').update(payload).eq('id', id);
+                } else {
+                    payload.etapa = 1;
+                    await supabase.from('os_movida').insert([payload]);
+                }
+                fecharModal();
+                carregarDados();
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
             }
-            fecharModal();
-            carregarDados();
         }
 
         async function mudarEtapa(id, novaEtapa) {
@@ -213,12 +220,17 @@
             document.getElementById('os-id').value = id;
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
-            document.getElementById('unidade').value = unidade !== 'null' ? unidade : 'Guarulhos';
-            document.getElementById('responsavel').value = responsavel !== 'null' ? responsavel : 'Oficina';
-            document.getElementById('pecas').value = pecas !== 'null' ? pecas : '';
+            document.getElementById('unidade').value = (unidade && unidade !== 'null') ? unidade : 'Guarulhos';
+            document.getElementById('responsavel').value = (responsavel && responsavel !== 'null') ? responsavel : 'Oficina';
+            document.getElementById('pecas').value = (pecas && pecas !== 'null') ? pecas : '';
         }
 
-        if (supabase) carregarDados();
+        // Inicializa o sistema assim que a página carregar
+        window.onload = function() {
+            if (supabase) carregarDados();
+        };
     </script>
+</body>
+</html>
 </body>
 </html>
