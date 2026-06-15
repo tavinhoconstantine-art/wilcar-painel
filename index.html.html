@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILCAR OS - Painel Administrativo Movida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brutalYellow: '#FFE600',
+                        brutalOrange: '#FF5E00',
+                        brutalBlue: '#00E1FF',
+                        brutalGreen: '#00FF66',
+                        brutalPurple: '#A855F7',
+                        brutalCard: '#FFFFFF',
+                        brutalBg: '#F3F4F6'
+                    },
+                    boxShadow: {
+                        brutal: '4px 4px 0px 0px #000000',
+                        brutalHover: '2px 2px 0px 0px #000000',
+                        brutalActive: '0px 0px 0px 0px #000000',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@400;700&family=Public+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Public Sans', sans-serif; background-color: #F0F2F5; }
+        .font-brutal-title { font-family: 'Lexend Mega', sans-serif; }
+        .brutal-border { border: 3px solid #000000; }
+        .brutal-border-b { border-bottom: 3px solid #000000; }
+        .brutal-border-r { border-right: 3px solid #000000; }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-black">
+
+    <header class="brutal-border bg-brutalYellow p-6 mb-8 shadow-brutal flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+        <div>
+            <h1 class="text-2xl md:text-4xl font-black font-brutal-title uppercase tracking-tight">⚡ WILCAR FUNILARIA & PINTURA</h1>
+            <p class="text-sm md:text-base font-bold mt-1 uppercase text-stone-800">Sistema de Logística de Peças — Contrato Especial: <span class="bg-black text-white px-2 py-0.5">FROTA MOVIDA</span></p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+            <div class="flex flex-wrap gap-2">
+                <span class="text-xs font-black uppercase bg-black text-white px-3 py-3 brutal-border flex items-center">Filtrar Unidade:</span>
+                <button onclick="filtrarUnidade('TODAS')" id="btn-todas" class="bg-black text-white font-black uppercase text-xs px-4 py-3 brutal-border shadow-brutalActive transition-all">Todas</button>
+                <button onclick="filtrarUnidade('LEOPOLDINA')" id="btn-leopoldina" class="bg-white text-black font-black uppercase text-xs px-4 py-3 brutal-border shadow-brutal hover:shadow-brutalHover transition-all">📍 Leopoldina</button>
+                <button onclick="filtrarUnidade('TATUAPÉ')" id="btn-tajuape" class="bg-white text-black font-black uppercase text-xs px-4 py-3 brutal-border shadow-brutal hover:shadow-brutalHover transition-all">📍 Tatuapé</button>
+            </div>
+
+            <div class="w-full sm:w-auto">
+                <button onclick="abrirModalNovaOS()" class="w-full sm:w-auto bg-brutalGreen text-black font-black uppercase px-4 py-3 brutal-border shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] transition-all">
+                    + Nova O.S. Movida
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white brutal-border p-4 shadow-brutal">
+            <div class="text-xs font-black uppercase text-stone-500">Wilcar Leopoldina</div>
+            <div class="text-3xl font-black font-brutal-title mt-1 text-blue-600">00 <span class="text-xs font-sans font-bold text-stone-400">ativos</span></div>
+        </div>
+        <div class="bg-white brutal-border p-4 shadow-brutal">
+            <div class="text-xs font-black uppercase text-stone-500">Wilcar Tatuapé</div>
+            <div class="text-3xl font-black font-brutal-title mt-1 text-purple-600">00 <span class="text-xs font-sans font-bold text-stone-400">ativos</span></div>
+        </div>
+        <div class="bg-white brutal-border p-4 shadow-brutal border-l-brutalOrange">
+            <div class="text-xs font-black uppercase text-red-600">⚠️ Peças Pendentes Movida</div>
+            <div class="text-3xl font-black font-brutal-title mt-1 text-brutalOrange">02</div>
+        </div>
+        <div class="bg-brutalGreen brutal-border p-4 shadow-brutal">
+            <div class="text-xs font-black uppercase text-black">Total Parada Operacional</div>
+            <div class="text-3xl font-black font-brutal-title mt-1">00</div>
+        </div>
+    </div>
+
+    <main class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        <section class="bg-white brutal-border shadow-brutal min-h-[500px]">
+            <div class="bg-black text-white p-3 font-black uppercase tracking-wider text-sm">1. Vistoria / Orçamento</div>
+            <div class="p-3 space-y-4" id="col-vistoria"></div>
+        </section>
+
+        <section class="bg-white brutal-border shadow-brutal min-h-[500px]">
+            <div class="bg-stone-800 text-white p-3 font-black uppercase tracking-wider text-sm">2. No Perito / Portal</div>
+            <div class="p-3 space-y-4" id="col-portal"></div>
+        </section>
+
+        <section class="bg-orange-50 brutal-border shadow-brutal min-h-[500px] border-t-brutalOrange">
+            <div class="bg-brutalOrange text-black p-3 font-black uppercase tracking-wider text-sm brutal-border-b">3. Peças / MOVIDA</div>
+            <div class="p-3 space-y-4" id="col-pecas-movida"></div>
+        </section>
+
+        <section class="bg-purple-50 brutal-border shadow-brutal min-h-[500px]">
+            <div class="bg-purple-900 text-white p-3 font-black uppercase tracking-wider text-sm">4. Peças / OFICINA</div>
+            <div class="p-3 space-y-4" id="col-pecas-oficina"></div>
+        </section>
+
+        <section class="bg-green-50 brutal-border shadow-brutal min-h-[500px] border-t-brutalGreen">
+            <div class="bg-brutalGreen text-black p-3 font-black uppercase tracking-wider text-sm brutal-border-b">5. Na Oficina / Funil.</div>
+            <div class="p-3 space-y-4" id="col-execucao"></div>
+        </section>
+    </main>
+
+    <div id="modalPecas" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white brutal-border shadow-brutal w-full max-w-3xl p-6 relative">
+            <button onclick="fecharModalPecas()" class="absolute top-4 right-4 bg-red-500 text-white font-black px-3 py-1 brutal-border shadow-brutalActive hover:bg-red-600">X</button>
+            <div class="mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="bg-brutalOrange text-black text-xs font-black px-2 py-1 uppercase brutal-border">FROTA MOVIDA</span>
+                    <span class="bg-purple-600 text-white text-xs font-black px-2 py-1 uppercase brutal-border" id="modalPecasUnidadeTag">📍 WILCAR</span>
+                </div>
+                <h2 class="text-2xl font-black uppercase mt-2 font-brutal-title" id="modalPecasTitulo">VEÍCULO</h2>
+                <p class="text-sm text-stone-600 font-bold">Local de Entrega das Peças: <span class="underline decoration-brutalOrange decoration-2" id="modalPecasTextoLocal">---</span></p>
+            </div>
+            <div class="border-3 border-black p-4 bg-purple-50 text-black mb-4">
+                <p class="text-xs font-black uppercase flex items-center gap-1">🚨 ALERTA DE RECEBIMENTO WILCAR:</p>
+                <p class="text-xs mt-1 font-semibold">Emitir a autorização Movida associando o endereço correto da respectiva filial Wilcar.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left brutal-border text-xs md:text-sm">
+                    <thead>
+                        <tr class="bg-black text-white uppercase font-black">
+                            <th class="p-2 brutal-border-r">Item / Peça</th>
+                            <th class="p-2 brutal-border-r">Canal</th>
+                            <th class="p-2 brutal-border-r">Destino de Entrega</th>
+                            <th class="p-2 brutal-border-r">Status Logístico</th>
+                            <th class="p-2">Obs / Link Interno</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="fecharModalPecas()" class="bg-black text-white px-4 py-2 font-black uppercase text-xs brutal-border">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalGenerico" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white brutal-border shadow-brutal w-full max-w-md p-6 relative">
+            <button onclick="fecharModal()" class="absolute top-4 right-4 bg-red-500 text-white font-black px-2 py-0.5 brutal-border">X</button>
+            <span class="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5" id="gPlaca">PLACA</span>
+            <h2 class="text-xl font-black uppercase mt-2 font-brutal-title" id="gTitulo">Veículo</h2>
+            <p class="text-xs font-bold text-stone-500 mt-1" id="gSinistro">Sinistro</p>
+            <p class="text-sm mt-4 p-3 bg-stone-100 border-l-4 border-black font-medium" id="gDesc">Detalhes.</p>
+        </div>
+    </div>
+
+    <div id="modalNovaOS" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white brutal-border shadow-brutal w-full max-w-md p-6 relative">
+            <button onclick="fecharModalNovaOS()" class="absolute top-4 right-4 bg-red-500 text-white font-black px-3 py-1 brutal-border shadow-brutalActive hover:bg-red-600">X</button>
+            <h2 class="text-2xl font-black uppercase font-brutal-title mb-4">🆕 Nova O.S. Movida</h2>
+            <form id="formNovaOS" class="space-y-4" onsubmit="salvarNovaOS(event)">
+                <div>
+                    <label class="block text-xs font-black uppercase mb-1">Placa do Veículo:</label>
+                    <input type="text" id="addPlaca" placeholder="Ex: ARG-2230" required class="w-full p-2 brutal-border uppercase font-bold focus:bg-brutalYellow outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-black uppercase mb-1">Modelo / Ano:</label>
+                    <input type="text" id="addModelo" placeholder="Ex: Fiat Argo 22/23" required class="w-full p-2 brutal-border font-medium focus:bg-brutalYellow outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-black uppercase mb-1">Nº do Sinistro (Portal):</label>
+                    <input type="text" id="addSinistro" placeholder="Ex: 95441" required class="w-full p-2 brutal-border font-medium focus:bg-brutalYellow outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-black uppercase mb-1">Unidade Wilcar de Destino:</label>
+                    <select id="addUnidade" required class="w-full p-2 brutal-border font-black bg-white focus:bg-brutalYellow outline-none">
+                        <option value="1">📍 LEOPOLDINA</option>
+                        <option value="2">📍 TATUAPÉ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-black uppercase mb-1">Observações / Danos:</label>
+                    <textarea id="addObservacoes" placeholder="Ex: Batida frontal..." class="w-full p-2 brutal-border font-medium focus:bg-brutalYellow outline-none h-20"></textarea>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="fecharModalNovaOS()" class="bg-black text-white px-4 py-2 font-black uppercase text-xs brutal-border">Cancelar</button>
+                    <button type="submit" class="bg-brutalGreen text-black px-4 py-2 font-black uppercase text-xs brutal-border shadow-brutal">Salvar no Banco</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://pboowzhhmcbxlmceyips.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let todasOS = [];
+        let unidadeFiltroAtual = 'TODAS';
+
+        const carrosTesteLocal = [
+            { id: 1, placa: 'ARG-2230', modelo: 'Fiat Argo 22/23', sinistro: '95441', status_fluxo: 'AGUARDANDO_PECAS', observacoes: '⚠️ Falta Capô para Tatuapé', unidades: { nome: 'TATUAPÉ' } },
+            { id: 2, placa: 'MOBI-4412', modelo: 'Fiat Mobi 1.0', sinistro: '98221', status_fluxo: 'VISTORIA', observacoes: 'Batida traseira leve.', unidades: { nome: 'LEOPOLDINA' } },
+            { id: 3, placa: 'HB20-8901', modelo: 'HB20 Vision', sinistro: '98110', status_fluxo: 'VISTORIA', observacoes: 'Avaria lateral esquerda.', unidades: { nome: 'TATUAPÉ' } }
+        ];
+
+        async function carregarPainel() {
+            todasOS = carrosTesteLocal;
+
+            try {
+                if (window.location.protocol !== 'file:') {
+                    const { data, error } = await supabaseClient
+                        .from('ordens_servico')
+                        .select('id, placa, modelo, sinistro, status_fluxo, observacoes, data_entrada, unidades(nome)');
+
+                    if (!error && data && data.length > 0) {
+                        todasOS = data;
+                    }
+                }
+            } catch (err) {
+                console.log("Modo de teste local ativo");
+            }
+
+            renderizarKanban();
+            atualizarMetricas();
+        }
+
+        function renderizarKanban() {
+            const colunas = {
+                'VISTORIA': document.getElementById('col-vistoria'),
+                'PORTAL': document.getElementById('col-portal'),
+                'AGUARDANDO_PECAS': document.getElementById('col-pecas-movida'),
+                'PECAS_OFICINA': document.getElementById('col-pecas-oficina'),
+                'EXECUCAO': document.getElementById('col-execucao')
+            };
+
+            Object.values(colunas).forEach(col => { if(col) col.innerHTML = ''; });
+
+            const osFiltradas = todasOS.filter(os => unidadeFiltroAtual === 'TODAS' || os.unidades?.nome === unidadeFiltroAtual);
+
+            osFiltradas.forEach(os => {
+                const nomeUnidade = os.unidades?.nome || 'N/A';
+                const bgBadge = nomeUnidade === 'LEOPOLDINA' ? 'bg-blue-100 text-blue-800 border-blue-400' : 'bg-purple-100 text-purple-800 border-purple-400';
+                const funcaoClique = os.status_fluxo === 'AGUARDANDO_PECAS' 
+                    ? `abrirDetalhesPecas(${os.id}, '${os.placa}', '${os.modelo}', '${nomeUnidade}')`
+                    : `abrirModal('${os.placa}', '${os.modelo}', 'Sinistro: ${os.sinistro}', '${os.observacoes}')`;
+
+                const cardHTML = `
+                    <div class="bg-white brutal-border p-3 shadow-brutal card-os cursor-pointer hover:rotate-1 transition-transform" onclick="${funcaoClique}">
+                        <div class="flex justify-between items-start gap-2 mb-2">
+                            <span class="bg-black text-white text-xs font-black px-2 py-0.5 uppercase">${os.placa}</span>
+                            <span class="text-[10px] font-black px-1.5 py-0.5 border ${bgBadge}">📍 ${nomeUnidade}</span>
+                        </div>
+                        <h3 class="font-black text-base uppercase leading-tight">${os.modelo}</h3>
+                        <p class="text-xs text-stone-600 mt-1 line-clamp-2">${os.observacoes || 'Sem observações.'}</p>
+                        <div class="mt-3 pt-2 border-t-2 border-dashed border-black flex justify-between items-center">
+                            <span class="text-[10px] font-black uppercase bg-brutalYellow px-1.5 py-0.5 brutal-border">${os.status_fluxo.replace('_', ' ')}</span>
+                        </div>
+                    </div>
+                `;
+                if (colunas[os.status_fluxo]) colunas[os.status_fluxo].innerHTML += cardHTML;
+            });
+        }
+
+        async function abrirDetalhesPecas(osId, placa, modelo, unidade) {
+            document.getElementById('modalPecasTitulo').innerText = `${modelo} — PLACA: ${placa}`;
+            document.getElementById('modalPecasUnidadeTag').innerText = `📍 WILCAR - ${unidade}`;
+            document.getElementById('modalPecasTextoLocal').innerText = `Galpão Wilcar ${unidade} / SP`;
+            document.getElementById('modalPecasUnidadeTag').className = unidade === 'LEOPOLDINA' ? "bg-blue-600 text-white text-xs font-black px-2 py-1 uppercase brutal-border" : "bg-purple-600 text-white text-xs font-black px-2 py-1 uppercase brutal-border";
+
+            const tbody = document.querySelector('#modalPecas table tbody');
+            tbody.innerHTML = '';
+
+            try {
+                let pecas = [];
+                if (window.location.protocol !== 'file:') {
+                    const { data } = await supabaseClient.from('pecas_os').select('*').eq('os_id', osId);
+                    pecas = data || [];
+                }
+                
+                if(pecas.length === 0) {
+                    pecas = [
+                        { nome_peca: 'Parachoque Dianteiro', canal_fornecimento: 'MOVIDA_CORPORATIVO', status_logistica: 'ENTREGUE', codigo_rastreio_nf: 'NF-88712' },
+                        { nome_peca: 'Capô Dianteiro', canal_fornecimento: 'MOVIDA_CORPORATIVO', status_logistica: 'AGUARDANDO_ENVIO', codigo_rastreio_nf: 'Sem sinal no portal' }
+                    ];
+                }
+
+                pecas.forEach(peca => {
+                    const tagCanal = peca.canal_fornecimento === 'MOVIDA_CORPORATIVO' ? `<span class="bg-brutalOrange text-black font-bold px-1.5 py-0.5 text-[10px]">MOVIDA</span>` : `<span class="bg-black text-white font-bold px-1.5 py-0.5 text-[10px]">OFICINA</span>`;
+                    let statusCor = peca.status_logistica === 'ENTREGUE' ? 'text-green-600' : 'text-red-600 animate-pulse';
+                    tbody.innerHTML += `
+                        <tr class="border-b-2 border-black bg-stone-50">
+                            <td class="p-2 font-bold brutal-border-r">${peca.nome_peca}</td>
+                            <td class="p-2 brutal-border-r">${tagCanal}</td>
+                            <td class="p-2 brutal-border-r font-bold ${unidade === 'LEOPOLDINA' ? 'text-blue-600' : 'text-purple-700'}">📍 ${unidade}</td>
+                            <td class="p-2 brutal-border-r font-black ${statusCor}">● ${peca.status_logistica}</td>
+                            <td class="p-2 text-stone-600">${peca.codigo_rastreio_nf || '---'}</td>
+                        </tr>`;
+                });
+                document.getElementById('modalPecas').classList.remove('hidden');
+            } catch (e) { console.error(e); }
+        }
+
+        function actualizarMetricas() {
+            const osFiltradas = todasOS.filter(os => unidadeFiltroAtual === 'TODAS' || os.unidades?.nome === unidadeFiltroAtual);
+            const leoCount = osFiltradas.filter(os => os.unidades?.nome === 'LEOPOLDINA').length;
+            const tatuapeCount = osFiltradas.filter(os => os.unidades?.nome === 'TATUAPÉ').length;
+            
+            const elLeo = document.querySelector('.grid > div:nth-child(1) .text-3xl');
+            const elTat = document.querySelector('.grid > div:nth-child(2) .text-3xl');
+            const elTot = document.querySelector('.grid > div:nth-child(4) .text-3xl');
+
+            if(elLeo) elLeo.innerHTML = `${String(leoCount).padStart(2, '0')} <span class="text-xs font-sans font-bold text-stone-400">ativos</span>`;
+            if(elTat) elTat.innerHTML = `${String(tatuapeCount).padStart(2, '0')} <span class="text-xs font-sans font-bold text-stone-400">ativos</span>`;
+            if(elTot) elTot.innerText = String(osFiltradas.length).padStart(2, '0');
+        }
+
+        function filtrarUnidade(unidade) {
+            unidadeFiltroAtual = unidade;
+            const idsBotoes = { 'TODAS': 'btn-todas', 'LEOPOLDINA': 'btn-leopoldina', 'TATUAPÉ': 'btn-tajuape' };
+            
+            Object.keys(idsBotoes).forEach(k => {
+                const el = document.getElementById(idsBotoes[k]);
+                if(el) {
+                    el.className = k === unidade 
+                        ? "bg-black text-white font-black uppercase text-xs px-4 py-3 brutal-border shadow-brutalActive transition-all" 
+                        : "bg-white text-black font-black uppercase text-xs px-4 py-3 brutal-border shadow-brutal hover:shadow-brutalHover transition-all";
+                }
+            });
+            renderizarKanban();
+            actualizarMetricas();
+        }
+
+        function abrirModalNovaOS() { document.getElementById('modalNovaOS').classList.remove('hidden'); }
+        function fecharModalNovaOS() { document.getElementById('modalNovaOS').classList.add('hidden'); document.getElementById('formNovaOS').reset(); }
+        function abrirModal(placa, veiculo, sinistro, desc) { document.getElementById('gPlaca').innerText = "PLACA: " + placa; document.getElementById('gTitulo').innerText = veiculo; document.getElementById('gSinistro').innerText = sinistro; document.getElementById('gDesc').innerText = desc; document.getElementById('modalGenerico').classList.remove('hidden'); }
+        function fecharModal() { document.getElementById('modalGenerico').classList.add('hidden'); }
+        function fecharModalPecas() { document.getElementById('modalPecas').classList.add('hidden'); }
+
+        async function salvarNovaOS(e) {
+            e.preventDefault();
+            const payload = {
+                placa: document.getElementById('addPlaca').value.toUpperCase(),
+                modelo: document.getElementById('addModelo').value,
+                sinistro: document.getElementById('addSinistro').value,
+                unidade_id: parseInt(document.getElementById('addUnidade').value),
+                observacoes: document.getElementById('addObservacoes').value,
+                status_fluxo: 'VISTORIA'
+            };
+            try {
+                if (window.location.protocol !== 'file:') {
+                    const { error } = await supabaseClient.from('ordens_servico').insert([payload]);
+                    if (error) throw error;
+                    alert('Cadastrado com sucesso no banco!');
+                } else {
+                    // Adiciona localmente na memória para simular o cadastro no PC
+                    payload.unidades = { nome: payload.unidade_id === 1 ? 'LEOPOLDINA' : 'TATUAPÉ' };
+                    payload.id = todasOS.length + 1;
+                    todasOS.push(payload);
+                    alert('Cadastrado no modo de teste do PC!');
+                }
+                fecharModalNovaOS();
+                renderizarKanban();
+                actualizarMetricas();
+            } catch (err) { alert('Erro ao salvar: ' + err.message); }
+        }
+
+        window.onload = carregarPainel;
+    </script>
+</body>
+</html>
