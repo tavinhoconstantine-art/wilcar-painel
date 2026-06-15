@@ -120,26 +120,28 @@
                         let botaoVoltar = etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
                         let botaoAvancar = etapa < 5 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
-                        col.innerHTML += `
-                            <div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
-                                <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button type="button" onclick="editarOS(${item.id}, '${item.placa}', '${item.modelo}', '${item.sinistro}', '${item.status}', '${item.detalhes}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
-                                    <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
-                                </div>
-                                <div class="text-xs font-black bg-[#000] text-white px-1.5 py-0.5 inline-block mb-2">${item.placa}</div>
-                                <h4 class="font-black text-sm uppercase">${item.modelo}</h4>
-                                <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">${item.sinistro || 'Não informada'}</span></p>
-                                <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">${item.status || 'Oficina'}</span></p>
-                                <div class="mt-2 pt-2 border-t border-dashed border-black">
-                                    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
-                                    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${item.detalhes || ''}</p>
-                                </div>
-                                <div class="flex justify-between mt-3 pt-2 border-t border-black">
-                                    ${botaoVoltar}
-                                    ${botaoAvancar}
-                                </div>
-                            </div>
-                        `;
+                        // Montagem do card usando concatenação de strings pura e simples para evitar erros de interpolação do navegador
+                        let htmlCard = '';
+                        htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
+                        htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
+                        htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.placa + '\', \'' + item.modelo + '\', \'' + item.sinistro + '\', \'' + item.status + '\', \'' + item.detalhes + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                        htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
+                        htmlCard += '  </div>';
+                        htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + item.placa + '</div>';
+                        htmlCard += '  <h4 class="font-black text-sm uppercase">' + item.modelo + '</h4>';
+                        htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">' + (item.sinistro || 'Não informada') + '</span></p>';
+                        htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + (item.status || 'Oficina') + '</span></p>';
+                        htmlCard += '  <div class="mt-2 pt-2 border-t border-dashed border-black">';
+                        htmlCard += '    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>';
+                        htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + (item.detalhes || '') + '</p>';
+                        htmlCard += '  </div>';
+                        htmlCard += '  <div class="flex justify-between mt-3 pt-2 border-t border-black">';
+                        htmlCard += '    ' + botaoVoltar;
+                        htmlCard += '    ' + botaoAvancar;
+                        htmlCard += '  </div>';
+                        htmlCard += '</div>';
+
+                        col.innerHTML += htmlCard;
                     }
                 });
             } catch (err) {
