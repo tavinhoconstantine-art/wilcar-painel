@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
     <script src="https://cdn.tailwindcss.com"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
         .brutal-border { border: 4px solid #000000; }
@@ -120,7 +120,7 @@
                         let botaoVoltar = etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
                         let botaoAvancar = etapa < 5 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
-                        // Montagem do card usando concatenação de strings pura e simples para evitar erros de interpolação do navegador
+                        // Montagem 100% limpa por concatenação comum para não dar erro de interpolação
                         let htmlCard = '';
                         htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                         htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
