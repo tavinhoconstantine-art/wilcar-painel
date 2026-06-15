@@ -105,7 +105,8 @@
         async function carregarDados() {
             if (!supabase) return;
             try {
-                const { data, error } = await supabase.from('os_movida').select('*').order('id', { ascending: true });
+                // APONTADO PARA A TABELA CORRETA: 'servicos'
+                const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
                 for (let i = 1; i <= 5; i++) {
@@ -120,7 +121,6 @@
                         let botaoVoltar = etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
                         let botaoAvancar = etapa < 5 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
-                        // Montagem 100% limpa por concatenação comum para não dar erro de interpolação
                         let htmlCard = '';
                         htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                         htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
@@ -162,10 +162,10 @@
                 };
 
                 if (id) {
-                    await supabase.from('os_movida').update(payload).eq('id', id);
+                    await supabase.from('servicos').update(payload).eq('id', id);
                 } else {
                     payload.etapa = 1;
-                    await supabase.from('os_movida').insert([payload]);
+                    await supabase.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
@@ -175,13 +175,13 @@
         }
 
         async function mudarEtapa(id, novaEtapa) {
-            await supabase.from('os_movida').update({ etapa: novaEtapa }).eq('id', id);
+            await supabase.from('servicos').update({ etapa: novaEtapa }).eq('id', id);
             carregarDados();
         }
 
         async function deletarOS(id) {
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
-                await supabase.from('os_movida').delete().eq('id', id);
+                await supabase.from('servicos').delete().eq('id', id);
                 carregarDados();
             }
         }
