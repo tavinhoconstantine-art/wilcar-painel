@@ -70,9 +70,8 @@
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Unidade Wilcar</label>
                         <select id="unidade" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
-                            <option value="Guarulhos">Tatuapé</option>
-                            <option value="São Paulo">Leopoldina</option>
-                            <option value="Outra">Outra Unidade</option>
+                            <option value="Tatuapé">Tatuapé</option>
+                            <option value="Leopoldina">Leopoldina</option>
                         </select>
                     </div>
                     <div>
@@ -110,14 +109,17 @@
                 if (error) throw error;
 
                 for (let i = 1; i <= 5; i++) {
-                    const col = document.getElementById(`col-${i}`);
+                    const col = document.getElementById('col-' + i);
                     if (col) col.innerHTML = '';
                 }
 
                 data.forEach(item => {
                     const etapa = item.etapa || 1;
-                    const col = document.getElementById(`col-${etapa}`);
+                    const col = document.getElementById('col-' + etapa);
                     if (col) {
+                        let botaoVoltar = etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
+                        let botaoAvancar = etapa < 5 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
+
                         col.innerHTML += `
                             <div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
                                 <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -133,8 +135,8 @@
                                     <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${item.detalhes || ''}</p>
                                 </div>
                                 <div class="flex justify-between mt-3 pt-2 border-t border-black">
-                                    \${etapa > 1 ? `<button type="button" onclick="mudarEtapa(\${item.id}, \${etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
-                                    \${etapa < 5 ? `<button type="button" onclick="mudarEtapa(\\${item.id}, \\${etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
+                                    ${botaoVoltar}
+                                    ${botaoAvancar}
                                 </div>
                             </div>
                         `;
@@ -199,7 +201,7 @@
             document.getElementById('os-id').value = id;
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
-            document.getElementById('unidade').value = (unidade && unidade !== 'null') ? unidade : 'Guarulhos';
+            document.getElementById('unidade').value = (unidade && unidade !== 'null') ? unidade : 'Tatuapé';
             document.getElementById('responsavel').value = (responsavel && responsavel !== 'null') ? responsavel : 'Oficina';
             document.getElementById('pecas').value = (pecas && pecas !== 'null') ? pecas : '';
         }
