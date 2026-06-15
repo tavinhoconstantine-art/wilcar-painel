@@ -26,26 +26,18 @@
         </button>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Aguardando Cotação</h2>
+            <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
             <div id="col-1" class="space-y-4 min-h-[500px]"></div>
         </div>
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito</h2>
+            <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito / Montagem</h2>
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#FECA57] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Peças na Oficina</h2>
+            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
-        </div>
-        <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#48DBFB] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">4. Em Montagem</h2>
-            <div id="col-4" class="space-y-4 min-h-[500px]"></div>
-        </div>
-        <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">5. Pronto / Liberado</h2>
-            <div id="col-5" class="space-y-4 min-h-[500px]"></div>
         </div>
     </div>
 
@@ -56,6 +48,7 @@
             
             <form id="form-os" onsubmit="salvarOS(event)" class="space-y-4">
                 <input type="hidden" id="os-id">
+                <input type="hidden" id="os-carro-antigo">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Placa do Veículo</label>
@@ -84,7 +77,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-black uppercase mb-1">Lista de Peças Necessárias</label>
-                    <textarea id="pecas" rows="4" required placeholder="Ex: Capô, Farol Direito, Para-choque dianteiro..." class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9] resize-none"></textarea>
+                    <textarea id="pecas" rows="4" required placeholder="Ex: Capô, Farol Direito..." class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9] resize-none"></textarea>
                 </div>
                 <div class="flex justify-end space-x-4 pt-2">
                     <button type="button" onclick="fecharModal()" class="bg-[#FF6B6B] text-white font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Cancelar</button>
@@ -99,41 +92,51 @@
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
-        // Inicialização do Banco
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function carregarDados() {
             if (!supabase) return;
             try {
-                // APONTADO PARA A TABELA CORRETA: 'servicos'
+                // LENDO A TAMBELA 'servicos' QUE JÁ EXISTE E FUNCIONA
                 const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
-                for (let i = 1; i <= 5; i++) {
+                for (let i = 1; i <= 3; i++) {
                     const col = document.getElementById('col-' + i);
                     if (col) col.innerHTML = '';
                 }
 
                 data.forEach(item => {
-                    const etapa = item.etapa || 1;
-                    const col = document.getElementById('col-' + etapa);
+                    // Decodificando as informações guardadas dentro do campo 'carro'
+                    let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: '', etapa: 1 };
+                    
+                    if (item.carro && item.carro.includes('||')) {
+                        let partes = item.carro.split('||');
+                        info.modelo = partes[0];
+                        info.unidade = partes[1] || 'Tatuapé';
+                        info.responsavel = partes[2] || 'Oficina';
+                        info.pecas = partes[3] || '';
+                        info.etapa = parseInt(partes[4] || '1');
+                    }
+
+                    const col = document.getElementById('col-' + info.etapa);
                     if (col) {
-                        let botaoVoltar = etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
-                        let botaoAvancar = etapa < 5 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
+                        let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', \'' + item.nome + '\', \'' + item.carro + '\', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
+                        let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', \'' + item.nome + '\', \'' + item.carro + '\', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
                         let htmlCard = '';
                         htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                         htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                        htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.placa + '\', \'' + item.modelo + '\', \'' + item.sinistro + '\', \'' + item.status + '\', \'' + item.detalhes + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                        htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + info.modelo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + info.pecas.replace(/\n/g, ' ') + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
                         htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
                         htmlCard += '  </div>';
-                        htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + item.placa + '</div>';
-                        htmlCard += '  <h4 class="font-black text-sm uppercase">' + item.modelo + '</h4>';
-                        htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">' + (item.sinistro || 'Não informada') + '</span></p>';
-                        htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + (item.status || 'Oficina') + '</span></p>';
+                        htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
+                        htmlCard += '  <h4 class="font-black text-sm uppercase">' + info.modelo + '</h4>';
+                        htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">' + info.unidade + '</span></p>';
+                        htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + info.responsavel + '</span></p>';
                         htmlCard += '  <div class="mt-2 pt-2 border-t border-dashed border-black">';
                         htmlCard += '    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>';
-                        htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + (item.detalhes || '') + '</p>';
+                        htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + info.pecas + '</p>';
                         htmlCard += '  </div>';
                         htmlCard += '  <div class="flex justify-between mt-3 pt-2 border-t border-black">';
                         htmlCard += '    ' + botaoVoltar;
@@ -145,7 +148,7 @@
                     }
                 });
             } catch (err) {
-                console.error("Erro ao carregar dados:", err);
+                console.error(err);
             }
         }
 
@@ -153,29 +156,46 @@
             e.preventDefault();
             try {
                 const id = document.getElementById('os-id').value;
+                const placa = document.getElementById('placa').value;
+                const modelo = document.getElementById('modelo').value;
+                const unidade = document.getElementById('unidade').value;
+                const responsavel = document.getElementById('responsavel').value;
+                const pecas = document.getElementById('pecas').value;
+                
+                // Mantém a etapa antiga se for uma edição, ou começa na 1 se for novo
+                let etapaAtual = "1";
+                if (id && document.getElementById('os-carro-antigo').value.includes('||')) {
+                    let partes = document.getElementById('os-carro-antigo').value.split('||');
+                    etapaAtual = partes[4] || "1";
+                }
+
+                // Compactando tudo na coluna 'carro' que o seu banco já aceita
+                const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecas + "||" + etapaAtual;
+
                 const payload = {
-                    placa: document.getElementById('placa').value,
-                    modelo: document.getElementById('modelo').value,
-                    sinistro: document.getElementById('unidade').value, 
-                    status: document.getElementById('responsavel').value, 
-                    detalhes: document.getElementById('pecas').value    
+                    nome: placa,
+                    carro: stringCompactada
                 };
 
                 if (id) {
                     await supabase.from('servicos').update(payload).eq('id', id);
                 } else {
-                    payload.etapa = 1;
                     await supabase.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
-                console.error("Erro ao salvar:", err);
+                console.error(err);
             }
         }
 
-        async function mudarEtapa(id, novaEtapa) {
-            await supabase.from('servicos').update({ etapa: novaEtapa }).eq('id', id);
+        async function mudarEtapa(id, nomePlaca, carroString, novaEtapa) {
+            if (!carroString.includes('||')) return;
+            let partes = carroString.split('||');
+            // Atualiza apenas o número da etapa no final da string
+            const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa;
+            
+            await supabase.from('servicos').update({ carro: novaString }).eq('id', id);
             carregarDados();
         }
 
@@ -189,6 +209,7 @@
         function abrirModal() {
             document.getElementById('form-os').reset();
             document.getElementById('os-id').value = '';
+            document.getElementById('os-carro-antigo').value = '';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             document.getElementById('modal').classList.remove('hidden');
         }
@@ -203,9 +224,12 @@
             document.getElementById('os-id').value = id;
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
-            document.getElementById('unidade').value = (unidade && unidade !== 'null') ? unidade : 'Tatuapé';
-            document.getElementById('responsavel').value = (responsavel && responsavel !== 'null') ? responsavel : 'Oficina';
-            document.getElementById('pecas').value = (pecas && pecas !== 'null') ? pecas : '';
+            document.getElementById('unidade').value = unidade;
+            document.getElementById('responsavel').value = responsavel;
+            document.getElementById('pecas').value = pecas;
+            
+            // Guarda o valor completo antigo para preservar a etapa na hora de salvar
+            document.getElementById('os-carro-antigo').value = modelo + "||" + unidade + "||" + responsavel + "||" + pecas;
         }
 
         window.onload = function() {
