@@ -5,22 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         /* Estilo Brutalismo */
-        .brutal-border {
-            border: 4px solid #000000;
-        }
-        .brutal-shadow {
-            box-shadow: 5px 5px 0px 0px #000000;
-        }
-        .brutal-shadow-sm {
-            box-shadow: 3px 3px 0px 0px #000000;
-        }
-        .brutal-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px 0px #000000;
-        }
+        .brutal-border { border: 4px solid #000000; }
+        .brutal-shadow { box-shadow: 5px 5px 0px 0px #000000; }
+        .brutal-shadow-sm { box-shadow: 3px 3px 0px 0px #000000; }
+        .brutal-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px 0px #000000; }
     </style>
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
@@ -28,9 +19,9 @@
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-8 flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
-            <p class="text-sm font-bold mt-1 uppercase">Logística & Controle de Peças (Carros Aprovados)</p>
+            <p class="text-sm font-bold mt-1 uppercase">Logística &amp; Controle de Peças (Carros Aprovados)</p>
         </div>
-        <button onclick="abrirModal()" class="bg-[#38E54D] text-black font-black uppercase px-6 py-3 brutal-border brutal-shadow-sm brutal-btn text-sm tracking-wider">
+        <button type="button" onclick="abrirModal()" class="bg-[#38E54D] text-black font-black uppercase px-6 py-3 brutal-border brutal-shadow-sm brutal-btn text-sm tracking-wider">
             + Nova Demanda de Peça
         </button>
     </header>
@@ -40,22 +31,18 @@
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Aguardando Cotação</h2>
             <div id="col-1" class="space-y-4 min-h-[500px]"></div>
         </div>
-
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito</h2>
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
-
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FECA57] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Peças na Oficina</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
         </div>
-
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#48DBFB] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">4. Em Montagem</h2>
             <div id="col-4" class="space-y-4 min-h-[500px]"></div>
         </div>
-
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">5. Pronto / Liberado</h2>
             <div id="col-5" class="space-y-4 min-h-[500px]"></div>
@@ -64,12 +51,11 @@
 
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
-            <button onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
+            <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
             <h3 id="modal-titulo" class="text-xl font-black uppercase mb-4 bg-[#FFDE4D] p-2 brutal-border inline-block">Nova O.S. Peças</h3>
             
             <form id="form-os" onsubmit="salvarOS(event)" class="space-y-4">
                 <input type="hidden" id="os-id">
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Placa do Veículo</label>
@@ -80,7 +66,6 @@
                         <input type="text" id="modelo" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Unidade Wilcar</label>
@@ -98,12 +83,10 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-black uppercase mb-1">Lista de Peças Necessárias</label>
                     <textarea id="pecas" rows="4" required placeholder="Ex: Capô, Farol Direito, Para-choque dianteiro..." class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9] resize-none"></textarea>
                 </div>
-
                 <div class="flex justify-end space-x-4 pt-2">
                     <button type="button" onclick="fecharModal()" class="bg-[#FF6B6B] text-white font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Cancelar</button>
                     <button type="submit" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
@@ -112,14 +95,12 @@
         </div>
     </div>
 
-   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <script>
-        // CONFIGURAÇÃO DO BANCO (Coloque seus dados aqui)
+        // CONFIGURAÇÃO DO BANCO (Substitua com seus dados reais)
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
-        // Inicialização sem travas
+        // Inicialização do Banco
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function carregarDados() {
@@ -128,7 +109,6 @@
                 const { data, error } = await supabase.from('os_movida').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
-                // Limpa as colunas
                 for (let i = 1; i <= 5; i++) {
                     const col = document.getElementById(`col-${i}`);
                     if (col) col.innerHTML = '';
@@ -152,10 +132,9 @@
                                     <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
                                     <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${item.detalhes || ''}</p>
                                 </div>
-                                
                                 <div class="flex justify-between mt-3 pt-2 border-t border-black">
-                                    ${etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
-                                    ${etapa < 5 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
+                                    \${etapa > 1 ? `<button type="button" onclick="mudarEtapa(\${item.id}, \${etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
+                                    \${etapa < 5 ? `<button type="button" onclick="mudarEtapa(\\${item.id}, \\${etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
                                 </div>
                             </div>
                         `;
@@ -225,12 +204,9 @@
             document.getElementById('pecas').value = (pecas && pecas !== 'null') ? pecas : '';
         }
 
-        // Inicializa o sistema assim que a página carregar
         window.onload = function() {
             if (supabase) carregarDados();
         };
     </script>
-</body>
-</html>
 </body>
 </html>
