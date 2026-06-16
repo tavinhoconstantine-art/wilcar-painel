@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
+        /* Estilo Brutalismo */
         .brutal-border { border: 4px solid #000000; }
         .brutal-shadow { box-shadow: 5px 5px 0px 0px #000000; }
         .brutal-shadow-sm { box-shadow: 3px 3px 0px 0px #000000; }
@@ -15,15 +16,30 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
-    <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-8 flex justify-between items-center">
+    <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
             <p class="text-sm font-bold mt-1 uppercase">Logística &amp; Controle de Peças (Carros Aprovados)</p>
         </div>
-        <button type="button" onclick="abrirModal()" class="bg-[#38E54D] text-black font-black uppercase px-6 py-3 brutal-border brutal-shadow-sm brutal-btn text-sm tracking-wider">
+        <button type="button" onclick="abrirModal()" class="bg-[#38E54D] text-black font-black uppercase px-6 py-3 brutal-border brutal-shadow-sm brutal-btn text-sm tracking-wider w-full md:w-auto">
             + Nova Demanda de Peça
         </button>
     </header>
+
+    <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
+        <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
+        <div class="flex flex-wrap gap-2">
+            <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">
+                💥 Ver Todas
+            </button>
+            <button onclick="filtrarPorUnidade('Tatuapé')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">
+                🏢 Tatuapé
+            </button>
+            <button onclick="filtrarPorUnidade('Leopoldina')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">
+                🏭 Leopoldina
+            </button>
+        </div>
+    </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
@@ -87,11 +103,15 @@
     </div>
 
     <script>
-        // COLOQUE SEUS DADOS REAIS AQUI ABAIXO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Variável global para guardar a unidade selecionada no filtro
+        let unidadeFiltroAtual = "TODAS";
+        // Variável para guardar os dados vindos do banco
+        let dadosLocais = [];
 
         async function carregarDados() {
             if (!supabase) return;
@@ -99,54 +119,88 @@
                 const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
-                for (let i = 1; i <= 3; i++) {
-                    const col = document.getElementById('col-' + i);
-                    if (col) col.innerHTML = '';
-                }
-
-                data.forEach(item => {
-                    let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: '', etapa: 1 };
-                    
-                    if (item.carro && item.carro.includes('||')) {
-                        let partes = item.carro.split('||');
-                        info.modelo = partes[0];
-                        info.unidade = partes[1] || 'Tatuapé';
-                        info.responsavel = partes[2] || 'Oficina';
-                        info.pecas = partes[3] || '';
-                        info.etapa = parseInt(partes[4] || '1');
-                    }
-
-                    const col = document.getElementById('col-' + info.etapa);
-                    if (col) {
-                        let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', \'' + item.nome + '\', \'' + item.carro + '\', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
-                        let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', \'' + item.nome + '\', \'' + item.carro + '\', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
-
-                        let htmlCard = '';
-                        htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
-                        htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                        htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + info.modelo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + info.pecas.replace(/\n/g, ' ') + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
-                        htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
-                        htmlCard += '  </div>';
-                        htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
-                        htmlCard += '  <h4 class="font-black text-sm uppercase">' + info.modelo + '</h4>';
-                        htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">' + info.unidade + '</span></p>';
-                        htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + info.responsavel + '</span></p>';
-                        htmlCard += '  <div class="mt-2 pt-2 border-t border-dashed border-black">';
-                        htmlCard += '    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>';
-                        htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + info.pecas + '</p>';
-                        htmlCard += '  </div>';
-                        htmlCard += '  <div class="flex justify-between mt-3 pt-2 border-t border-black">';
-                        htmlCard += '    ' + botaoVoltar;
-                        htmlCard += '    ' + botaoAvancar;
-                        htmlCard += '  </div>';
-                        htmlCard += '</div>';
-
-                        col.innerHTML += htmlCard;
-                    }
-                });
+                dadosLocais = data; // Salva uma cópia local para filtrar rápido na tela
+                renderizarPainel();
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function renderizarPainel() {
+            // Limpa as colunas do Kanban antes de desenhar
+            for (let i = 1; i <= 3; i++) {
+                const col = document.getElementById('col-' + i);
+                if (col) col.innerHTML = '';
+            }
+
+            dadosLocais.forEach(item => {
+                let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: '', etapa: 1 };
+                
+                if (item.carro && item.carro.includes('||')) {
+                    let partes = item.carro.split('||');
+                    info.modelo = partes[0];
+                    info.unidade = partes[1] || 'Tatuapé';
+                    info.responsavel = partes[2] || 'Oficina';
+                    info.pecas = partes[3] || '';
+                    info.etapa = parseInt(partes[4] || '1');
+                }
+
+                // APLICAÇÃO DO FILTRO: Se não for "TODAS" e a unidade do carro for diferente da selecionada, ignora e pula para o próximo
+                if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) {
+                    return;
+                }
+
+                const col = document.getElementById('col-' + info.etapa);
+                if (col) {
+                    let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
+                    let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
+
+                    let htmlCard = '';
+                    htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
+                    htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
+                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + info.modelo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + info.pecas.replace(/\n/g, ' ') + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                    htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
+                    htmlCard += '  </div>';
+                    htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
+                    htmlCard += '  <h4 class="font-black text-sm uppercase">' + info.modelo + '</h4>';
+                    htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📍 Unidade: <span class="underline">' + info.unidade + '</span></p>';
+                    htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + info.responsavel + '</span></p>';
+                    htmlCard += '  <div class="mt-2 pt-2 border-t border-dashed border-black">';
+                    htmlCard += '    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>';
+                    htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + info.pecas + '</p>';
+                    htmlCard += '  </div>';
+                    htmlCard += '  <div class="flex justify-between mt-3 pt-2 border-t border-black">';
+                    htmlCard += '    ' + botaoVoltar;
+                    htmlCard += '    ' + botaoAvancar;
+                    htmlCard += '  </div>';
+                    htmlCard += '</div>';
+
+                    col.innerHTML += htmlCard;
+                }
+            });
+        }
+
+        // Função chamada ao clicar nos botões de filtro
+        function filtrarPorUnidade(unidade) {
+            unidadeFiltroAtual = unity = unidade;
+            
+            // Ajusta o visual dos botões de filtro (estilo brutalista ativo/inativo)
+            const botoes = {
+                'TODAS': document.getElementById('btn-filtro-todas'),
+                'Tatuapé': document.getElementById('btn-filtro-tatuape'),
+                'Leopoldina': document.getElementById('btn-filtro-leopoldina')
+            };
+
+            for (let chave in botoes) {
+                if (botoes[chave]) {
+                    if (chave === unidade) {
+                        botoes[chave].className = "bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider";
+                    } else {
+                        botoes[chave].className = "bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider";
+                    }
+                }
+            }
+            renderizarPainel();
         }
 
         async function salvarOS() {
@@ -164,35 +218,38 @@
                 }
                 
                 let etapaAtual = "1";
-                if (id && document.getElementById('os-carro-antigo').value.includes('||')) {
-                    let partes = document.getElementById('os-carro-antigo').value.split('||');
-                    etapaAtual = partes[4] || "1";
+                if (id) {
+                    const itemAntigo = dadosLocais.find(d => d.id == id);
+                    if (itemAntigo && itemAntigo.carro && itemAntigo.carro.includes('||')) {
+                        etapaAtual = itemAntigo.carro.split('||')[4] || "1";
+                    }
                 }
 
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecas + "||" + etapaAtual;
+                const payload = { nome: placa, carro: stringCompactada };
 
                 if (id) {
-                    // Atualização simples
-                    await supabase.from('servicos').update({ nome: placa, carro: stringCompactada }).eq('id', id);
+                    await supabase.from('servicos').update(payload).eq('id', id);
                 } else {
-                    // MUDANÇA CRUCIAL: Chamando a função RPC para burlar o erro de ID do banco
-                    const { error } = await supabase.rpc('inserir_servico_auto', {
-                        nome_veiculo: placa,
-                        carro_dados: stringCompactada
-                    });
-                    if (error) throw error;
+                    const { data: maxData, error: maxError } = await supabase.from('servicos').select('id').order('id', { ascending: false }).limit(1);
+                    let proximoId = 1;
+                    if (!maxError && maxData && maxData.length > 0) {
+                        proximoId = parseInt(maxData[0].id) + 1;
+                    }
+                    payload.id = proximoId;
+                    await supabase.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
                 console.error(err);
-                alert("Erro ao salvar: " + err.message);
             }
         }
 
-        async function mudarEtapa(id, nomePlaca, carroString, novaEtapa) {
-            if (!carroString.includes('||')) return;
-            let partes = carroString.split('||');
+        async function mudarEtapa(id, novaEtapa) {
+            const item = dadosLocais.find(d => d.id == id);
+            if (!item || !item.carro.includes('||')) return;
+            let partes = item.carro.split('||');
             const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa;
             
             await supabase.from('servicos').update({ carro: novaString }).eq('id', id);
@@ -227,7 +284,6 @@
             document.getElementById('unidade').value = unidade;
             document.getElementById('responsavel').value = responsavel;
             document.getElementById('pecas').value = pecas;
-            document.getElementById('os-carro-antigo').value = modelo + "||" + unidade + "||" + responsavel + "||" + pecas;
         }
 
         window.onload = function() {
