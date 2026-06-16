@@ -6,8 +6,8 @@
     <title>Wilcar - Controle de Peças</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca Oficial do Supabase -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
+    <!-- IMPORTAÇÃO CORRIGIDA: Versão estável que aceita a sintaxe padrão do painel -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
         .brutal-border { border: 4px solid #000000; }
@@ -113,24 +113,26 @@
     </div>
 
     <script>
-        // INSIRA SEUS DADOS REAIS DO SUPABASE AQUI
+        // COLOQUE SEUS ACESSOS REAIS AQUI
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
+        let supabaseClient = null;
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
-        function obterClienteBanco() {
+        // Conexão direta e robusta sem travas ocultas
+        function conectarBanco() {
+            if (supabaseClient) return supabaseClient;
             if (window.supabase && window.supabase.createClient) {
-                return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            } else if (window.Supabase && window.Supabase.createClient) {
-                return window.Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                return supabaseClient;
             }
             return null;
         }
 
         async function carregarDados() {
-            const cliente = obterClienteBanco();
+            const cliente = conectarBanco();
             if (!cliente) return;
             try {
                 const { data, error } = await cliente.from('servicos').select('*').order('id', { ascending: true });
@@ -138,7 +140,7 @@
                 dadosLocais = data || [];
                 renderizarPainel();
             } catch (err) {
-                console.error("Erro ao carregar:", err);
+                console.error("Erro ao carregar dados:", err);
             }
         }
 
@@ -156,7 +158,6 @@
             }
 
             dadosLocais.forEach(item => {
-                // CONFIGURAÇÃO SEGURA: Se o dado for antigo ou incompleto, o painel assume valores padrão sem quebrar
                 let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: 'Não informadas', etapa: 1, data: '' };
                 
                 if (item.carro && item.carro.includes('||')) {
@@ -212,8 +213,11 @@
         }
 
         async function salvarOS() {
-            const cliente = obterClienteBanco();
-            if (!cliente) return;
+            const cliente = conectarBanco();
+            if (!cliente) {
+                alert("Erro crítico: A biblioteca do Supabase falhou ao carregar!");
+                return;
+            }
             
             try {
                 const idCampo = document.getElementById('os-id') ? document.getElementById('os-id').value : '';
@@ -227,7 +231,7 @@
                 const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
 
                 if (!placa || !modelo) {
-                    alert("Por favor, preencha a Placa e o Modelo!");
+                    alert("Por favor, preencha a Placa e o Modelo do Veículo!");
                     return;
                 }
 
@@ -257,7 +261,7 @@
         }
 
         async function mudarEtapa(id, novaEtapa) {
-            const cliente = obterClienteBanco();
+            const cliente = conectarBanco();
             if (!cliente) return;
             const item = dadosLocais.find(d => d.id == id);
             if (!item) return;
@@ -271,7 +275,7 @@
         }
 
         async function deletarOS(id) {
-            const cliente = obterClienteBanco();
+            const cliente = conectarBanco();
             if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
                 await cliente.from('servicos').delete().eq('id', id);
