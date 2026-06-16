@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca Oficial do Supabase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -16,6 +18,7 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
+    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -26,6 +29,7 @@
         </button>
     </header>
 
+    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
@@ -41,6 +45,7 @@
         </div>
     </div>
 
+    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
@@ -56,6 +61,7 @@
         </div>
     </div>
 
+    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -110,7 +116,6 @@
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
-        let unity = "TODAS"; 
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
@@ -129,7 +134,6 @@
             try {
                 const { data, error } = await cliente.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
-
                 dadosLocais = data || [];
                 renderizarPainel();
             } catch (err) {
@@ -152,7 +156,6 @@
 
             dadosLocais.forEach(item => {
                 let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: '', etapa: 1, data: '' };
-                
                 if (item.carro && item.carro.includes('||')) {
                     let partes = item.carro.split('||');
                     info.modelo = partes[0] || '';
@@ -163,60 +166,43 @@
                     info.data = partes[5] || '';
                 }
 
-                if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) {
-                    return;
-                }
+                if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) return;
 
                 const col = document.getElementById('col-' + info.etapa);
                 if (col) {
-                    let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
-                    let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
+                    let botaoVoltar = info.etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>';
+                    let botaoAvancar = info.etapa < 3 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>';
 
                     let modeloLimpo = (info.modelo || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     let pecasLimpas = (info.pecas || '').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
 
-                    let htmlCard = '';
-                    htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
-                    htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
-                    htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
-                    htmlCard += '  </div>';
-                    htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
-                    htmlCard += '  <h4 class="font-black text-sm uppercase">' + info.modelo + '</h4>';
-                    htmlCard += '  <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">' + formatarDataBR(info.data) + '</span></p>';
-                    htmlCard += '  <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">' + info.unidade + '</span></p>';
-                    htmlCard += '  <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">' + info.responsavel + '</span></p>';
-                    htmlCard += '  <div class="mt-2 pt-2 border-t border-dashed border-black">';
-                    htmlCard += '    <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>';
-                    htmlCard += '    <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">' + info.pecas + '</p>';
-                    htmlCard += '  </div>';
-                    htmlCard += '  <div class="flex justify-between mt-3 pt-2 border-t border-black">';
-                    htmlCard += '    ' + botaoVoltar;
-                    htmlCard += '    ' + botaoAvancar;
-                    htmlCard += '  </div>';
-                    htmlCard += '</div>';
-
+                    let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
+                        <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" onclick="editarOS(${item.id}, '${item.nome}', '${modeloLimpo}', '${info.unidade}', '${info.responsavel}', '${pecasLimpas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
+                            <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
+                        </div>
+                        <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">${item.nome || 'SEM PLACA'}</div>
+                        <h4 class="font-black text-sm uppercase">${info.modelo}</h4>
+                        <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
+                        <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
+                        <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">${info.responsavel}</span></p>
+                        <div class="mt-2 pt-2 border-t border-dashed border-black">
+                            <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
+                            <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${info.pecas}</p>
+                        </div>
+                        <div class="flex justify-between mt-3 pt-2 border-t border-black">${botaoVoltar}${botaoAvancar}</div>
+                    </div>`;
                     col.innerHTML += htmlCard;
                 }
             });
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unity = unidade;
-            
-            const botoes = {
-                'TODAS': document.getElementById('btn-filtro-todas'),
-                'Tatuapé': document.getElementById('btn-filtro-tatuape'),
-                'Leopoldina': document.getElementById('btn-filtro-leopoldina')
-            };
-
+            unidadeFiltroAtual = unidade;
+            const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
-                    if (chave === unidade) {
-                        botoes[chave].className = "bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider";
-                    } else {
-                        botoes[chave].className = "bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider";
-                    }
+                    botoes[chave].className = (chave === unidade) ? "bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider" : "bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider";
                 }
             }
             renderizarPainel();
@@ -227,23 +213,25 @@
             if (!cliente) return;
             
             try {
-                const id = document.getElementById('os-id').value;
-                const placa = document.getElementById('placa').value;
-                const modelo = document.getElementById('modelo').value;
-                const unidade = document.getElementById('unidade').value;
-                const responsavel = document.getElementById('responsavel').value;
-                const pecas = document.getElementById('pecas').value;
-                const dataDemanda = document.getElementById('data_demanda').value;
+                // CORREÇÃO DA LOGÍSTICA DE LEITURA: Garante o tratamento do ID mesmo se estiver vazio ou nulo
+                const idCampo = document.getElementById('os-id') ? document.getElementById('os-id').value : '';
+                const idLimpo = idCampo.trim();
+
+                const placa = document.getElementById('placa') ? document.getElementById('placa').value : '';
+                const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value : '';
+                const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
+                const responsavel = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
+                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value : '';
+                const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
 
                 if (!placa || !modelo || !dataDemanda) {
                     alert("Por favor, preencha todos os campos obrigatórios (Placa, Modelo e Data)!");
                     return;
                 }
 
-                // Lógica de etapa direta e infalível
                 let etapaAtual = "1";
-                if (id) {
-                    const itemAntigo = dadosLocais.find(d => d.id == id);
+                if (idLimpo !== '') {
+                    const itemAntigo = dadosLocais.find(d => d.id == idLimpo);
                     if (itemAntigo && itemAntigo.carro && itemAntigo.carro.includes('||')) {
                         etapaAtual = itemAntigo.carro.split('||')[4] || "1";
                     }
@@ -253,16 +241,16 @@
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
-                if (id) {
-                    await cliente.from('servicos').update(payload).eq('id', id);
+                // Condicional limpa baseada no ID normalizado
+                if (idLimpo !== '') {
+                    await cliente.from('servicos').update(payload).eq('id', idLimpo);
                 } else {
-                    // Deixa o Supabase auto-incrementar o ID sozinho
                     await cliente.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
-                console.error(err);
+                console.error("Erro capturado na funcao salvarOS:", err);
             }
         }
 
@@ -274,7 +262,6 @@
             let partes = item.carro.split('||');
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa + "||" + dataSalva;
-            
             await cliente.from('servicos').update({ carro: novaString }).eq('id', id);
             carregarDados();
         }
@@ -290,36 +277,31 @@
 
         function abrirModal() {
             document.getElementById('form-os').reset();
-            document.getElementById('os-id').value = '';
+            if (document.getElementById('os-id')) document.getElementById('os-id').value = '';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
-            
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('data_demanda').value = hoje;
-            
+            if (document.getElementById('data_demanda')) {
+                document.getElementById('data_demanda').value = new Date().toISOString().split('T')[0];
+            }
             document.getElementById('modal').classList.remove('hidden');
         }
 
-        function fecharModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
+        function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
 
         function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva) {
             abrirModal();
             document.getElementById('modal-titulo').innerText = 'Editar Registro';
-            document.getElementById('os-id').value = id;
-            document.getElementById('placa').value = placa;
-            document.getElementById('modelo').value = modelo;
-            document.getElementById('unidade').value = unidade;
-            document.getElementById('responsavel').value = responsavel;
-            document.getElementById('pecas').value = pecas;
-            if (dataSalva && dataSalva !== 'undefined') {
+            if (document.getElementById('os-id')) document.getElementById('os-id').value = id;
+            if (document.getElementById('placa')) document.getElementById('placa').value = placa;
+            if (document.getElementById('modelo')) document.getElementById('modelo').value = modelo;
+            if (document.getElementById('unidade')) document.getElementById('unidade').value = unidade;
+            if (document.getElementById('responsavel')) document.getElementById('responsavel').value = responsavel;
+            if (document.getElementById('pecas')) document.getElementById('pecas').value = pecas;
+            if (dataSalva && dataSalva !== 'undefined' && document.getElementById('data_demanda')) {
                 document.getElementById('data_demanda').value = dataSalva;
             }
         }
 
-        window.onload = function() {
-            carregarDados();
-        };
+        window.onload = function() { carregarDados(); };
     </script>
 </body>
 </html>
