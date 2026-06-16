@@ -98,7 +98,6 @@
                         </select>
                     </div>
                 </div>
-                <!-- NOVO CAMPO: DATA DA DEMANDA -->
                 <div>
                     <label class="block text-xs font-black uppercase mb-1">Data de Abertura</label>
                     <input type="date" id="data_demanda" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
@@ -137,7 +136,6 @@
             }
         }
 
-        // Função auxiliar para formatar a data padrão BR (DD/MM/AAAA)
         function formatarDataBR(dataIso) {
             if (!dataIso) return 'N/A';
             const partes = dataIso.split('-');
@@ -156,12 +154,12 @@
                 
                 if (item.carro && item.carro.includes('||')) {
                     let partes = item.carro.split('||');
-                    info.modelo = partes[0];
+                    info.modelo = partes[0] || '';
                     info.unidade = partes[1] || 'Tatuapé';
                     info.responsavel = partes[2] || 'Oficina';
                     info.pecas = partes[3] || '';
                     info.etapa = parseInt(partes[4] || '1');
-                    info.data = partes[5] || ''; // Recupera a data salva
+                    info.data = partes[5] || '';
                 }
 
                 if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) {
@@ -173,10 +171,14 @@
                     let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
                     let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
+                    // Correção segura para evitar que aspas ou quebras de linha quebrem o clique do botão de editar
+                    let modeloLimpo = (info.modelo || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    let pecasLimpas = (info.pecas || '').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
+
                     let htmlCard = '';
                     htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                     htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + info.modelo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + info.pecas.replace(/\n/g, ' ') + '\', \'' + info.data + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
                     htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
                     htmlCard += '  </div>';
                     htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
@@ -244,8 +246,10 @@
                     }
                 }
 
-                // Salvando tudo junto de forma organizada incluindo o novo campo data
-                const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecas + "||" + etapaAtual + "||" + dataDemanda;
+                // Normalização simples do texto das peças para remover quebras bruscas na hora de empacotar
+                const pecasNormalizadas = pecas.replace(/\n/g, ' ');
+
+                const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
                 if (id) {
@@ -271,7 +275,6 @@
             const item = dadosLocais.find(d => d.id == id);
             if (!item || !item.carro.includes('||')) return;
             let partes = item.carro.split('||');
-            // Preserva a data ao mover o card entre as colunas
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa + "||" + dataSalva;
             
@@ -292,7 +295,6 @@
             document.getElementById('os-id').value = '';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             
-            // Coloca a data de hoje automaticamente no campo
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('data_demanda').value = hoje;
             
