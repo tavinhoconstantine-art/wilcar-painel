@@ -132,7 +132,9 @@
 
         function formatarDataBR(dataIso) {
             if (!dataIso || dataIso === 'undefined') return 'N/A';
-            const partes = dataIso.split('-');
+            // Trata formatos de timestamp longos vindos do banco de dados antigo
+            let dataLimpa = dataIso.split('T')[0];
+            const partes = dataLimpa.split('-');
             if (partes.length !== 3) return dataIso;
             return partes[2] + '/' + partes[1] + '/' + partes[0];
         }
@@ -158,21 +160,35 @@
                     nomeUnidade = 'Leopoldina';
                 }
 
+                // ANALISADOR DINÂMICO DO RESPONSÁVEL: Extrai o prefixo [MOVIDA] ou [OFICINA] de dentro do campo sinistro
+                let textoSinistroRaw = item.sinistro || '';
+                let responsavelDetectado = 'Oficina';
+                let pecasLimpasParaExibir = textoSinistroRaw;
+
+                if (textoSinistroRaw.startsWith('[MOVIDA]')) {
+                    responsavelDetectado = 'Movida';
+                    pecasLimpasParaExibir = textoSinistroRaw.replace('[MOVIDA]', '').trim();
+                } else if (textoSinistroRaw.startsWith('[OFICINA]')) {
+                    responsavelDetectado = 'Oficina';
+                    pecasLimpasParaExibir = textoSinistroRaw.replace('[OFICINA]', '').trim();
+                }
+
                 let info = { 
                     modelo: dadoCarro, 
                     unidade: nomeUnidade, 
                     unidadeIdRaw: item.unidade_id ? item.unidade_id.toString() : '1',
-                    responsavel: 'Oficina', 
-                    pecas: item.sinistro || 'Não informadas', 
+                    responsavel: responsavelDetectado, 
+                    pecas: pecasLimpasParaExibir || 'Não informadas', 
                     etapa: etapaNum, 
                     data: item.data_entrada || '' 
                 };
                 
+                // Backup de compatibilidade caso ainda exista alguma string compactada antiga com barras (||)
                 if (dadoCarro && dadoCarro.toString().includes('||')) {
                     let partes = dadoCarro.split('||');
                     info.modelo = partes[0] || 'Sem modelo';
                     info.unidade = partes[1] || info.unidade;
-                    info.responsavel = partes[2] || 'Oficina';
+                    info.responsavel = partes[2] || info.responsavel;
                     info.pecas = partes[3] || info.pecas;
                     info.data = partes[5] || info.data;
                 }
@@ -193,6 +209,9 @@
                         <h4 class="font-black text-sm uppercase">${info.modelo}</h4>
                         <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
+                        
+                        <p class="text-xs font-bold mt-0.5 text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1 border border-black text-[11px] font-black uppercase">${info.responsavel}</span></p>
+                        
                         <div class="mt-2 pt-2 border-t border-dashed border-black">
                             <p class="text-[11px] font-bold text-gray-600 uppercase">Lista de Peças:</p>
                             <p class="text-xs font-medium bg-white p-1.5 brutal-border mt-0.5 whitespace-pre-line">${info.pecas}</p>
@@ -229,6 +248,7 @@
                 const placa = document.getElementById('placa') ? document.getElementById('placa').value.trim() : '';
                 const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
                 const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : '1';
+                const responsavel = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
                 const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
                 const pecasText = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
 
@@ -245,14 +265,17 @@
                     }
                 }
 
-                // Garante o envio do inteiro puro no cadastro/edição manual
+                // COMPACTAÇÃO INTELIGENTE DO SINISTRO: Adiciona a tag [MOVIDA] ou [OFICINA] no começo do texto para salvar junto
+                const tagResponsavel = `[${responsavel.toUpperCase()}] `;
+                const textoFinalSinistro = tagResponsavel + pecasText;
+
                 const payload = { 
                     placa: placa, 
                     modelo: modelo,
                     status_fluxo: etapaAtual,
                     unidade_id: parseInt(unidade),
                     data_entrada: dataDemanda || null,
-                    sinistro: pecasText
+                    sinistro: textoFinalSinistro
                 };
 
                 let err = null;
@@ -276,7 +299,6 @@
             }
         }
 
-        // CORREÇÃO DA MUDANÇA DE ETAPA: Blinda o clique de Avançar/Voltar convertendo unidade em Integer real
         async function mudarEtapa(id, novaEtapa) {
             const cliente = conectarBanco();
             if (!cliente) return;
@@ -308,7 +330,6 @@
             const cliente = conectarBanco();
             if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
-                await cliente.from('servicos').delete().eq('id', id); // Mantido o backup, alterado abaixo para tabela real
                 await cliente.from('ordens_servico').delete().eq('id', id);
                 await carregarDados();
             }
@@ -333,6 +354,7 @@
             if (document.getElementById('placa')) document.getElementById('placa').value = placa;
             if (document.getElementById('modelo')) document.getElementById('modelo').value = modelo;
             if (document.getElementById('unidade')) document.getElementById('unidade').value = unidadeId;
+            if (document.getElementById('responsavel')) document.getElementById('responsavel').value = responsavel;
             if (document.getElementById('pecas')) document.getElementById('pecas').value = pecas;
             if (dataSalva && dataSalva !== 'undefined' && document.getElementById('data_demanda')) {
                 document.getElementById('data_demanda').value = dataSalva;
