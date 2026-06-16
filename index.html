@@ -171,7 +171,6 @@
                     let botaoVoltar = info.etapa > 1 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa - 1) + ')" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>' : '<div></div>';
                     let botaoAvancar = info.etapa < 3 ? '<button type="button" onclick="mudarEtapa(' + item.id + ', ' + (info.etapa + 1) + ')" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>' : '<div></div>';
 
-                    // Correção segura para evitar que aspas ou quebras de linha quebrem o clique do botão de editar
                     let modeloLimpo = (info.modelo || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     let pecasLimpas = (info.pecas || '').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
 
@@ -201,6 +200,7 @@
             });
         }
 
+        // CORREÇÃO DA LINHA DO FILTRO: Removido o termo fantasma "unity =" que travava a função
         function filtrarPorUnidade(unidade) {
             unidadeFiltroAtual = unidade;
             
@@ -246,9 +246,7 @@
                     }
                 }
 
-                // Normalização simples do texto das peças para remover quebras bruscas na hora de empacotar
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ');
-
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
