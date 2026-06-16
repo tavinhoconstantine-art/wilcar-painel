@@ -153,7 +153,6 @@
                     if (st === '1' || st === '2' || st === '3') etapaNum = parseInt(st);
                 }
 
-                // Converte o ID numérico de volta para o nome legível na tela
                 let nomeUnidade = 'Tatuapé';
                 if (item.unidade_id && item.unidade_id.toString() === '2') {
                     nomeUnidade = 'Leopoldina';
@@ -168,8 +167,16 @@
                     etapa: etapaNum, 
                     data: item.data_entrada || '' 
                 };
+                
+                if (dadoCarro && dadoCarro.toString().includes('||')) {
+                    let partes = dadoCarro.split('||');
+                    info.modelo = partes[0] || 'Sem modelo';
+                    info.unidade = partes[1] || info.unidade;
+                    info.responsavel = partes[2] || 'Oficina';
+                    info.pecas = partes[3] || info.pecas;
+                    info.data = partes[5] || info.data;
+                }
 
-                // Filtro por unidade mapeado de forma correta
                 if (unidadeFiltroAtual !== "TODAS" && info.unidadeIdRaw !== unidadeFiltroAtual) return;
 
                 const col = document.getElementById('col-' + info.etapa);
@@ -238,7 +245,7 @@
                     }
                 }
 
-                // Ajuste numérico correto de unidade_id para o tipo integer do banco
+                // Garante o envio do inteiro puro no cadastro/edição manual
                 const payload = { 
                     placa: placa, 
                     modelo: modelo,
@@ -269,17 +276,31 @@
             }
         }
 
+        // CORREÇÃO DA MUDANÇA DE ETAPA: Blinda o clique de Avançar/Voltar convertendo unidade em Integer real
         async function mudarEtapa(id, novaEtapa) {
             const cliente = conectarBanco();
             if (!cliente) return;
+            
+            const item = dadosLocais.find(d => d.id == id);
+            if (!item) return;
+
+            let idUnidadeSeguro = 1; 
+            if (item.unidade_id) {
+                let uStr = item.unidade_id.toString().trim();
+                if (uStr === '2' || uStr === 'Leopoldina') idUnidadeSeguro = 2;
+            }
+
             try {
                 const { error } = await cliente.from('ordens_servico').update({ 
-                    status_fluxo: novaEtapa.toString() 
+                    status_fluxo: novaEtapa.toString(),
+                    unidade_id: idUnidadeSeguro 
                 }).eq('id', id);
+                
                 if (error) throw error;
                 await carregarDados();
             } catch (e) {
                 console.error("Erro ao mudar etapa:", e);
+                alert("Erro ao mover card: " + e.message);
             }
         }
 
@@ -287,6 +308,7 @@
             const cliente = conectarBanco();
             if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
+                await cliente.from('servicos').delete().eq('id', id); // Mantido o backup, alterado abaixo para tabela real
                 await cliente.from('ordens_servico').delete().eq('id', id);
                 await carregarDados();
             }
