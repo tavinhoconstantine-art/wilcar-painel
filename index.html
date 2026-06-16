@@ -63,6 +63,8 @@
             
             <form id="form-os" onsubmit="salvarOS(event)" class="space-y-4">
                 <input type="hidden" id="os-id">
+                <input type="hidden" id="os-etapa-atual" value="1">
+                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Placa do Veículo</label>
@@ -120,7 +122,7 @@
                 const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
-                dadosLocais = data;
+                dadosLocais = data || [];
                 renderizarPainel();
             } catch (err) {
                 console.error(err);
@@ -168,7 +170,7 @@
                     let htmlCard = '';
                     htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                     htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\', ' + info.etapa + ')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
                     htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
                     htmlCard += '  </div>';
                     htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
@@ -212,7 +214,6 @@
             renderizarPainel();
         }
 
-        // AJUSTE AQUI: Recebe o evento (e) para bloquear o comportamento padrão do form
         async function salvarOS(e) {
             if (e) e.preventDefault(); 
             if (!supabase) return;
@@ -225,19 +226,8 @@
                 const responsavel = document.getElementById('responsavel').value;
                 const pecas = document.getElementById('pecas').value;
                 const dataDemanda = document.getElementById('data_demanda').value;
-
-                if (!placa || !modelo || !dataDemanda) {
-                    alert("Por favor, preencha todos os campos obrigatórios!");
-                    return;
-                }
-                
-                let etapaAtual = "1";
-                if (id) {
-                    const itemAntigo = dadosLocais.find(d => d.id == id);
-                    if (itemAntigo && itemAntigo.carro && itemAntigo.carro.includes('||')) {
-                        etapaAtual = itemAntigo.carro.split('||')[4] || "1";
-                    }
-                }
+                // Puxa o valor da etapa diretamente do campo oculto, blindando contra erros de busca na lista vazia
+                const etapaAtual = document.getElementById('os-etapa-atual').value || "1";
 
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
@@ -246,6 +236,7 @@
                 if (id) {
                     await supabase.from('servicos').update(payload).eq('id', id);
                 } else {
+                    // Evita travamento se a tabela estiver 100% vazia
                     const { data: maxData, error: maxError } = await supabase.from('servicos').select('id').order('id', { ascending: false }).limit(1);
                     let proximoId = 1;
                     if (!maxError && maxData && maxData.length > 0) {
@@ -284,6 +275,7 @@
         function abrirModal() {
             document.getElementById('form-os').reset();
             document.getElementById('os-id').value = '';
+            document.getElementById('os-etapa-atual').value = '1'; // Reseta para a coluna 1 por padrão
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             
             const hoje = new Date().toISOString().split('T')[0];
@@ -296,10 +288,11 @@
             document.getElementById('modal').classList.add('hidden');
         }
 
-        function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva) {
+        function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva, etapaSalva) {
             abrirModal();
             document.getElementById('modal-titulo').innerText = 'Editar Registro';
             document.getElementById('os-id').value = id;
+            document.getElementById('os-etapa-atual').value = etapaSalva || '1'; // Preserva a coluna onde o card estava
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
             document.getElementById('unidade').value = unidade;
