@@ -113,6 +113,7 @@
     </div>
 
     <script>
+        // INSIRA SEUS DADOS REAIS DO SUPABASE AQUI
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -137,7 +138,7 @@
                 dadosLocais = data || [];
                 renderizarPainel();
             } catch (err) {
-                console.error(err);
+                console.error("Erro ao carregar:", err);
             }
         }
 
@@ -155,13 +156,15 @@
             }
 
             dadosLocais.forEach(item => {
-                let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: '', etapa: 1, data: '' };
+                // CONFIGURAÇÃO SEGURA: Se o dado for antigo ou incompleto, o painel assume valores padrão sem quebrar
+                let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: 'Não informadas', etapa: 1, data: '' };
+                
                 if (item.carro && item.carro.includes('||')) {
                     let partes = item.carro.split('||');
-                    info.modelo = partes[0] || '';
+                    info.modelo = partes[0] || item.carro;
                     info.unidade = partes[1] || 'Tatuapé';
                     info.responsavel = partes[2] || 'Oficina';
-                    info.pecas = partes[3] || '';
+                    info.pecas = partes[3] || 'Não informadas';
                     info.etapa = parseInt(partes[4] || '1');
                     info.data = partes[5] || '';
                 }
@@ -178,7 +181,7 @@
 
                     let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" onclick="editarOS(${item.id}, '${item.nome}', '${modeloLimpo}', '${info.unidade}', '${info.responsavel}', '${pecasLimpas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
+                            <button type="button" onclick="editarOS(${item.id}, '${item.nome || ''}', '${modeloLimpo}', '${info.unidade}', '${info.responsavel}', '${pecasLimpas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
                             <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
                         </div>
                         <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">${item.nome || 'SEM PLACA'}</div>
@@ -213,19 +216,18 @@
             if (!cliente) return;
             
             try {
-                // CORREÇÃO DA LOGÍSTICA DE LEITURA: Garante o tratamento do ID mesmo se estiver vazio ou nulo
                 const idCampo = document.getElementById('os-id') ? document.getElementById('os-id').value : '';
-                const idLimpo = idCampo.trim();
+                const idLimpo = idCampo.toString().trim();
 
-                const placa = document.getElementById('placa') ? document.getElementById('placa').value : '';
-                const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value : '';
+                const placa = document.getElementById('placa') ? document.getElementById('placa').value.trim() : '';
+                const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
                 const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
                 const responsavel = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
-                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value : '';
+                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
                 const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
 
-                if (!placa || !modelo || !dataDemanda) {
-                    alert("Por favor, preencha todos os campos obrigatórios (Placa, Modelo e Data)!");
+                if (!placa || !modelo) {
+                    alert("Por favor, preencha a Placa e o Modelo!");
                     return;
                 }
 
@@ -241,16 +243,16 @@
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
-                // Condicional limpa baseada no ID normalizado
                 if (idLimpo !== '') {
                     await cliente.from('servicos').update(payload).eq('id', idLimpo);
                 } else {
                     await cliente.from('servicos').insert([payload]);
                 }
+                
                 fecharModal();
-                carregarDados();
+                await carregarDados();
             } catch (err) {
-                console.error("Erro capturado na funcao salvarOS:", err);
+                console.error("Erro ao salvar:", err);
             }
         }
 
@@ -258,12 +260,14 @@
             const cliente = obterClienteBanco();
             if (!cliente) return;
             const item = dadosLocais.find(d => d.id == id);
-            if (!item || !item.carro.includes('||')) return;
-            let partes = item.carro.split('||');
+            if (!item) return;
+            
+            let partes = (item.carro && item.carro.includes('||')) ? item.carro.split('||') : [item.carro, 'Tatuapé', 'Oficina', '', '1', ''];
             const dataSalva = partes[5] || '';
-            const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa + "||" + dataSalva;
+            const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
+            
             await cliente.from('servicos').update({ carro: novaString }).eq('id', id);
-            carregarDados();
+            await carregarDados();
         }
 
         async function deletarOS(id) {
@@ -271,7 +275,7 @@
             if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
                 await cliente.from('servicos').delete().eq('id', id);
-                carregarDados();
+                await carregarDados();
             }
         }
 
