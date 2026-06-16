@@ -108,18 +108,28 @@
     </div>
 
     <script>
+        // CONFIGURAÇÕES FIXAS DO BANCO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
-        
-        const supabase = window.Supabase ? window.Supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
         
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
+        // Função direta para pegar o cliente do Supabase sem risco de retornar nulo
+        function obterClienteBanco() {
+            if (window.supabase && window.supabase.createClient) {
+                return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } else if (window.Supabase && window.Supabase.createClient) {
+                return window.Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+            return null;
+        }
+
         async function carregarDados() {
-            if (!supabase) return;
+            const cliente = obterClienteBanco();
+            if (!cliente) return;
             try {
-                const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
+                const { data, error } = await cliente.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
                 dadosLocais = data || [];
@@ -216,7 +226,12 @@
 
         async function salvarOS(e) {
             if (e) e.preventDefault(); 
-            if (!supabase) return;
+            
+            const cliente = obterClienteBanco();
+            if (!cliente) {
+                alert("Erro grave: Não foi possível conectar com o Supabase!");
+                return;
+            }
             
             try {
                 const id = document.getElementById('os-id').value;
@@ -226,48 +241,54 @@
                 const responsavel = document.getElementById('responsavel').value;
                 const pecas = document.getElementById('pecas').value;
                 const dataDemanda = document.getElementById('data_demanda').value;
-                // Puxa o valor da etapa diretamente do campo oculto, blindando contra erros de busca na lista vazia
                 const etapaAtual = document.getElementById('os-etapa-atual').value || "1";
+
+                if (!placa || !modelo || !dataDemanda) {
+                    alert("Por favor, preencha todos os campos obrigatórios!");
+                    return;
+                }
 
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
                 if (id) {
-                    await supabase.from('servicos').update(payload).eq('id', id);
+                    await cliente.from('servicos').update(payload).eq('id', id);
                 } else {
-                    // Evita travamento se a tabela estiver 100% vazia
-                    const { data: maxData, error: maxError } = await supabase.from('servicos').select('id').order('id', { ascending: false }).limit(1);
+                    const { data: maxData, error: maxError } = await cliente.from('servicos').select('id').order('id', { ascending: false }).limit(1);
                     let proximoId = 1;
                     if (!maxError && maxData && maxData.length > 0) {
                         proximoId = parseInt(maxData[0].id) + 1;
                     }
                     payload.id = proximoId;
-                    await supabase.from('servicos').insert([payload]);
+                    await cliente.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
                 console.error(err);
+                alert("Erro ao salvar dados: " + err.message);
             }
         }
 
         async function mudarEtapa(id, novaEtapa) {
-            if (!supabase) return;
+            const cliente = obterClienteBanco();
+            if (!cliente) return;
             const item = dadosLocais.find(d => d.id == id);
             if (!item || !item.carro.includes('||')) return;
             let partes = item.carro.split('||');
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + partes[1] + "||" + partes[2] + "||" + partes[3] + "||" + novaEtapa + "||" + dataSalva;
             
-            await supabase.from('servicos').update({ carro: novaString }).eq('id', id);
+            await cliente.from('servicos').update({ carro: novaString }).eq('id', id);
             carregarDados();
         }
 
         async function deletarOS(id) {
-            if (!supabase) return;
+            const cliente = obterClienteBanco();
+            if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
-                await supabase.from('servicos').delete().eq('id', id);
+                await cliente.from('servicos').delete().eq('id', id);
                 carregarDados();
             }
         }
@@ -275,7 +296,7 @@
         function abrirModal() {
             document.getElementById('form-os').reset();
             document.getElementById('os-id').value = '';
-            document.getElementById('os-etapa-atual').value = '1'; // Reseta para a coluna 1 por padrão
+            document.getElementById('os-etapa-atual').value = '1';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             
             const hoje = new Date().toISOString().split('T')[0];
@@ -292,7 +313,7 @@
             abrirModal();
             document.getElementById('modal-titulo').innerText = 'Editar Registro';
             document.getElementById('os-id').value = id;
-            document.getElementById('os-etapa-atual').value = etapaSalva || '1'; // Preserva a coluna onde o card estava
+            document.getElementById('os-etapa-atual').value = etapaSalva || '1';
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
             document.getElementById('unidade').value = unidade;
@@ -304,7 +325,7 @@
         }
 
         window.onload = function() {
-            if (supabase) carregarDados();
+            carregarDados();
         };
     </script>
 </body>
