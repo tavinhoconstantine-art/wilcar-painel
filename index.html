@@ -229,10 +229,10 @@
 
                 const placa = document.getElementById('placa') ? document.getElementById('placa').value.trim() : '';
                 const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
-                const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
-                const responsavel = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
-                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
-                const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
+                const sinistro = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
+                const status_fluxo = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
+                const unidade_id = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
+                const data_entrada = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
 
                 if (!placa || !modelo) {
                     alert("Por favor, preencha a Placa e o Modelo do Veículo!");
