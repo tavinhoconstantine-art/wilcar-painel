@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca estável do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -16,6 +18,7 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
+    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -26,15 +29,35 @@
         </button>
     </header>
 
-    <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
-        <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
-        <div class="flex flex-wrap gap-2">
-            <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">💥 Ver Todas</button>
-            <button onclick="filtrarPorUnidade('1')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏢 Tatuapé</button>
-            <button onclick="filtrarPorUnidade('2')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏭 Leopoldina</button>
+    <!-- PAINEL DE FILTROS & BUSCA -->
+    <div class="bg-white brutal-border brutal-shadow p-4 mb-8 space-y-4">
+        <!-- Linha 1: Filtro de Unidades -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 border-b border-dashed border-black pb-3">
+            <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">💥 Ver Todas</button>
+                <button onclick="filtrarPorUnidade('1')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏢 Tatuapé</button>
+                <button onclick="filtrarPorUnidade('2')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏭 Leopoldina</button>
+            </div>
+        </div>
+        
+        <!-- Linha 2: Busca por Placa/Modelo e Data -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <label class="block text-xs font-black uppercase mb-1">🔍 Pesquisar por Placa ou Carro:</label>
+                <input type="text" id="busca-texto" oninput="renderizarPainel()" placeholder="Digite a placa (ex: UBT8D93) ou modelo do veículo..." class="w-full p-2 brutal-border font-bold uppercase text-sm focus:outline-none bg-[#F9F9F9]">
+            </div>
+            <div>
+                <label class="block text-xs font-black uppercase mb-1">📅 Filtrar por Data de Entrada:</label>
+                <div class="flex gap-2">
+                    <input type="date" id="busca-data" onchange="renderizarPainel()" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
+                    <button onclick="limparFiltroData()" class="bg-[#FF6B6B] text-white font-black uppercase px-3 brutal-border brutal-shadow-sm brutal-btn text-xs">Limpar</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
@@ -45,11 +68,12 @@
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado</h2>
+            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado (Histórico)</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
         </div>
     </div>
 
+    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -130,13 +154,18 @@
             }
         }
 
+        // CORREÇÃO CIRÚRGICA DE TIMESTAMPS VINDOS DO BANCO
         function formatarDataBR(dataIso) {
             if (!dataIso || dataIso === 'undefined') return 'N/A';
-            // Trata formatos de timestamp longos vindos do banco de dados antigo
             let dataLimpa = dataIso.split('T')[0];
             const partes = dataLimpa.split('-');
             if (partes.length !== 3) return dataIso;
             return partes[2] + '/' + partes[1] + '/' + partes[0];
+        }
+
+        function limparFiltroData() {
+            document.getElementById('busca-data').value = '';
+            renderizarPainel();
         }
 
         function renderizarPainel() {
@@ -145,9 +174,14 @@
                 if (col) col.innerHTML = '';
             }
 
+            const filtroTexto = document.getElementById('busca-texto').value.toLowerCase().trim();
+            const filtroData = document.getElementById('busca-data').value; // Formato YYYY-MM-DD
+
             dadosLocais.forEach(item => {
                 let nomePlaca = item.placa || 'SEM PLACA';
                 let dadoCarro = item.modelo || 'SEM MODELO';
+                let dataEntradaRaw = item.data_entrada || '';
+                let dataEntradaLimpa = dataEntradaRaw.split('T')[0];
 
                 let etapaNum = 1;
                 if (item.status_fluxo) {
@@ -160,7 +194,6 @@
                     nomeUnidade = 'Leopoldina';
                 }
 
-                // ANALISADOR DINÂMICO DO RESPONSÁVEL: Extrai o prefixo [MOVIDA] ou [OFICINA] de dentro do campo sinistro
                 let textoSinistroRaw = item.sinistro || '';
                 let responsavelDetectado = 'Oficina';
                 let pecasLimpasParaExibir = textoSinistroRaw;
@@ -180,27 +213,32 @@
                     responsavel: responsavelDetectado, 
                     pecas: pecasLimpasParaExibir || 'Não informadas', 
                     etapa: etapaNum, 
-                    data: item.data_entrada || '' 
+                    data: dataEntradaLimpa 
                 };
-                
-                // Backup de compatibilidade caso ainda exista alguma string compactada antiga com barras (||)
-                if (dadoCarro && dadoCarro.toString().includes('||')) {
-                    let partes = dadoCarro.split('||');
-                    info.modelo = partes[0] || 'Sem modelo';
-                    info.unidade = partes[1] || info.unidade;
-                    info.responsavel = partes[2] || info.responsavel;
-                    info.pecas = partes[3] || info.pecas;
-                    info.data = partes[5] || info.data;
+
+                // 1. Aplica filtro de Unidade
+                if (unidadeFiltroAtual !== "TODAS" && info.unidadeIdRaw !== unidadeFiltroAtual) return;
+
+                // 2. Aplica Busca por Texto (Placa ou Modelo)
+                if (filtroTexto !== '') {
+                    const matchPlaca = nomePlaca.toLowerCase().includes(filtroTexto);
+                    const matchModelo = info.modelo.toLowerCase().includes(filtroTexto);
+                    const matchPecas = info.pecas.toLowerCase().includes(filtroTexto);
+                    if (!matchPlaca && !matchModelo && !matchPecas) return;
                 }
 
-                if (unidadeFiltroAtual !== "TODAS" && info.unidadeIdRaw !== unidadeFiltroAtual) return;
+                // 3. Aplica Filtro por Data exata
+                if (filtroData !== '' && info.data !== filtroData) return;
 
                 const col = document.getElementById('col-' + info.etapa);
                 if (col) {
                     let mapModelo = (info.modelo || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"');
                     let mapPecas = (info.pecas || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
 
-                    let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
+                    // Muda o fundo do card para verde claro se estiver na coluna 3 (Histórico de Concluídos)
+                    let corCardBg = info.etapa === 3 ? 'bg-[#E8F8F5]' : 'bg-[#F9F9F9]';
+
+                    let htmlCard = `<div class="${corCardBg} brutal-border brutal-shadow-sm p-3 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${mapModelo}', '${info.unidadeIdRaw}', '${info.responsavel}', '${mapPecas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
                             <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
@@ -209,9 +247,7 @@
                         <h4 class="font-black text-sm uppercase">${info.modelo}</h4>
                         <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
-                        
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1 border border-black text-[11px] font-black uppercase">${info.responsavel}</span></p>
-                        
                         <div class="mt-2 pt-2 border-t border-dashed border-black">
                             <p class="text-[11px] font-bold text-gray-600 uppercase">Lista de Peças:</p>
                             <p class="text-xs font-medium bg-white p-1.5 brutal-border mt-0.5 whitespace-pre-line">${info.pecas}</p>
@@ -265,7 +301,6 @@
                     }
                 }
 
-                // COMPACTAÇÃO INTELIGENTE DO SINISTRO: Adiciona a tag [MOVIDA] ou [OFICINA] no começo do texto para salvar junto
                 const tagResponsavel = `[${responsavel.toUpperCase()}] `;
                 const textoFinalSinistro = tagResponsavel + pecasText;
 
@@ -315,7 +350,7 @@
             try {
                 const { error } = await cliente.from('ordens_servico').update({ 
                     status_fluxo: novaEtapa.toString(),
-                    unidade_id: idUnidadeSeguro 
+                    unidade_id: idUnidadeSeguro
                 }).eq('id', id);
                 
                 if (error) throw error;
@@ -357,7 +392,8 @@
             if (document.getElementById('responsavel')) document.getElementById('responsavel').value = responsavel;
             if (document.getElementById('pecas')) document.getElementById('pecas').value = pecas;
             if (dataSalva && dataSalva !== 'undefined' && document.getElementById('data_demanda')) {
-                document.getElementById('data_demanda').value = dataSalva;
+                // Garante que o input date receba apenas a parte YYYY-MM-DD
+                document.getElementById('data_demanda').value = dataSalva.split('T')[0];
             }
         }
 
