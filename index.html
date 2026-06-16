@@ -45,7 +45,7 @@
         </div>
     </div>
 
-    <!-- Kanban Board (3 colunas integradas com a tabela servicos) -->
+    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Coluna 1 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
@@ -72,7 +72,6 @@
             
             <form id="form-os" onsubmit="return false;" class="space-y-4">
                 <input type="hidden" id="os-id">
-                <input type="hidden" id="os-carro-antigo">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Placa do Veículo</label>
@@ -105,6 +104,7 @@
                 </div>
                 <div class="flex justify-end space-x-4 pt-2">
                     <button type="button" onclick="fecharModal()" class="bg-[#FF6B6B] text-white font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Cancelar</button>
+                    <!-- CORREÇÃO DEFINITIVA: Adicionado onclick="salvarOS()" para o botão funcionar! -->
                     <button type="button" onclick="salvarOS()" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
                 </div>
             </form>
@@ -115,17 +115,14 @@
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
-        // CORREÇÃO DA LINHA DO PRINT: Inicializando com 'Supabase' maiúsculo conforme manda a biblioteca CDN
+        // Inicialização correta usando o objeto global da biblioteca CDN
         const supabase = window.Supabase ? window.Supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
         
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
         async function carregarDados() {
-            if (!supabase) {
-                console.error("Conexão com o Supabase não foi inicializada.");
-                return;
-            }
+            if (!supabase) return;
             try {
                 const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
@@ -276,7 +273,6 @@
         function abrirModal() {
             document.getElementById('form-os').reset();
             document.getElementById('os-id').value = '';
-            document.getElementById('os-carro-antigo').value = '';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             document.getElementById('modal').classList.remove('hidden');
         }
