@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca estável do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -18,7 +16,6 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
-    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -29,17 +26,15 @@
         </button>
     </header>
 
-    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
             <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">💥 Ver Todas</button>
-            <button onclick="filtrarPorUnidade('Tatuapé')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏢 Tatuapé</button>
-            <button onclick="filtrarPorUnidade('Leopoldina')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏭 Leopoldina</button>
+            <button onclick="filtrarPorUnidade('1')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏢 Tatuapé</button>
+            <button onclick="filtrarPorUnidade('2')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏭 Leopoldina</button>
         </div>
     </div>
 
-    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
@@ -55,7 +50,6 @@
         </div>
     </div>
 
-    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -78,8 +72,8 @@
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Unidade Wilcar</label>
                         <select id="unidade" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
-                            <option value="Tatuapé">Tatuapé</option>
-                            <option value="Leopoldina">Leopoldina</option>
+                            <option value="1">Tatuapé</option>
+                            <option value="2">Leopoldina</option>
                         </select>
                     </div>
                     <div>
@@ -159,27 +153,24 @@
                     if (st === '1' || st === '2' || st === '3') etapaNum = parseInt(st);
                 }
 
-                let dataExibicao = item.data_entrada || '';
+                // Converte o ID numérico de volta para o nome legível na tela
+                let nomeUnidade = 'Tatuapé';
+                if (item.unidade_id && item.unidade_id.toString() === '2') {
+                    nomeUnidade = 'Leopoldina';
+                }
 
                 let info = { 
                     modelo: dadoCarro, 
-                    unidade: item.unidade_id || 'Tatuapé', 
+                    unidade: nomeUnidade, 
+                    unidadeIdRaw: item.unidade_id ? item.unidade_id.toString() : '1',
                     responsavel: 'Oficina', 
                     pecas: item.sinistro || 'Não informadas', 
                     etapa: etapaNum, 
-                    data: dataExibicao 
+                    data: item.data_entrada || '' 
                 };
-                
-                if (dadoCarro && dadoCarro.toString().includes('||')) {
-                    let partes = dadoCarro.split('||');
-                    info.modelo = partes[0] || 'Sem modelo';
-                    info.unidade = partes[1] || info.unidade;
-                    info.responsavel = partes[2] || 'Oficina';
-                    info.pecas = partes[3] || info.pecas;
-                    info.data = partes[5] || info.data;
-                }
 
-                if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) return;
+                // Filtro por unidade mapeado de forma correta
+                if (unidadeFiltroAtual !== "TODAS" && info.unidadeIdRaw !== unidadeFiltroAtual) return;
 
                 const col = document.getElementById('col-' + info.etapa);
                 if (col) {
@@ -188,7 +179,7 @@
 
                     let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${mapModelo}', '${info.unidade}', '${info.responsavel}', '${mapPecas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
+                            <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${mapModelo}', '${info.unidadeIdRaw}', '${info.responsavel}', '${mapPecas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
                             <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
                         </div>
                         <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">${nomePlaca}</div>
@@ -210,8 +201,8 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = Bradley = unidade;
-            const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
+            unidadeFiltroAtual = unidade;
+            const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), '1': document.getElementById('btn-filtro-tatuape'), '2': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
                     botoes[chave].className = (chave === unidade) ? "bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider" : "bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider";
@@ -230,7 +221,7 @@
 
                 const placa = document.getElementById('placa') ? document.getElementById('placa').value.trim() : '';
                 const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
-                const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
+                const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : '1';
                 const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
                 const pecasText = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
 
@@ -247,12 +238,12 @@
                     }
                 }
 
-                // CORREÇÃO: Enviando a lista de peças diretamente para a coluna 'sinistro' de texto sem usar o replace defeituoso
+                // Ajuste numérico correto de unidade_id para o tipo integer do banco
                 const payload = { 
                     placa: placa, 
                     modelo: modelo,
                     status_fluxo: etapaAtual,
-                    unidade_id: unidade,
+                    unidade_id: parseInt(unidade),
                     data_entrada: dataDemanda || null,
                     sinistro: pecasText
                 };
@@ -313,13 +304,13 @@
 
         function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
 
-        function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva) {
+        function editarOS(id, placa, modelo, unidadeId, responsavel, pecas, dataSalva) {
             abrirModal();
             document.getElementById('modal-titulo').innerText = 'Editar Registro';
             if (document.getElementById('os-id')) document.getElementById('os-id').value = id;
             if (document.getElementById('placa')) document.getElementById('placa').value = placa;
             if (document.getElementById('modelo')) document.getElementById('modelo').value = modelo;
-            if (document.getElementById('unidade')) document.getElementById('unidade').value = unidade;
+            if (document.getElementById('unidade')) document.getElementById('unidade').value = unidadeId;
             if (document.getElementById('pecas')) document.getElementById('pecas').value = pecas;
             if (dataSalva && dataSalva !== 'undefined' && document.getElementById('data_demanda')) {
                 document.getElementById('data_demanda').value = dataSalva;
