@@ -11,7 +11,6 @@
     <style>
         /* Estilo Brutalismo */
         .brutal-border { border: 4px solid #000000; }
-        .brutal-border-sm { border: 2px solid #000000; }
         .brutal-shadow { box-shadow: 5px 5px 0px 0px #000000; }
         .brutal-shadow-sm { box-shadow: 3px 3px 0px 0px #000000; }
         .brutal-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px 0px #000000; }
@@ -60,16 +59,19 @@
 
     <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Coluna 1: Demandas de Peças -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
             <div id="col-1" class="space-y-4 min-h-[500px]"></div>
         </div>
+        <!-- Coluna 2: Comprada / Em Trânsito -->
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito / Montagem</h2>
+            <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Comprada / Em Trânsito</h2>
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
+        <!-- Coluna 3: Peça Recebida -->
         <div class="bg-white brutal-border brutal-shadow p-4">
-            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado (Histórico)</h2>
+            <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Peça Recebida</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
         </div>
     </div>
@@ -234,20 +236,20 @@
 
                     let corCardBg = info.etapa === 3 ? 'bg-[#E8F8F5]' : 'bg-[#F9F9F9]';
 
-                    // HTML ATUALIZADO: Placa com destaque amarelo e modelo em caixa alta gigante
+                    // HTML AJUSTADO: Destaques limpos apenas com tamanho de texto e negrito (sem molduras ao redor da placa)
                     let htmlCard = `<div class="${corCardBg} brutal-border brutal-shadow-sm p-4 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${mapModelo}', '${info.unidadeIdRaw}', '${info.responsavel}', '${mapPecas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
                             <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
                         </div>
                         
-                        <!-- DESTAQUE DA PLACA: Estilo tag chamativa -->
-                        <div class="text-sm font-black bg-[#FFDE4D] text-black px-2.5 py-1 inline-block brutal-border-sm uppercase tracking-wider mb-2 brutal-shadow-sm">
-                            📌 ${nomePlaca}
+                        <!-- PLACA: Apenas texto grande e em negrito bruto -->
+                        <div class="text-xl font-black text-black uppercase tracking-wide mb-1">
+                            ${nomePlaca}
                         </div>
                         
-                        <!-- DESTAQUE DO MODELO: Texto ampliado e imponente -->
-                        <h4 class="font-black text-xl uppercase tracking-tight text-black mb-2 border-b-2 border-black pb-1">${info.modelo}</h4>
+                        <!-- MODELO/VEÍCULO: Texto ampliado, em caixa alta e negrito -->
+                        <h4 class="font-black text-2xl uppercase tracking-tight text-black mb-2 border-b-2 border-black pb-1">${info.modelo}</h4>
                         
                         <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
@@ -269,7 +271,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unidade;
+            unidadeFiltroAtual = Bradley = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), '1': document.getElementById('btn-filtro-tatuape'), '2': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
