@@ -107,6 +107,7 @@
     </div>
 
     <script>
+        // INSIRA SEUS DADOS REAIS DO SUPABASE AQUI
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -127,7 +128,8 @@
             const cliente = conectarBanco();
             if (!cliente) return;
             try {
-                const { data, error } = await cliente.from('servicos').select('*').order('id', { ascending: true });
+                // CORREÇÃO: Apontando para o nome real da tabela 'ordens_servico'
+                const { data, error } = await cliente.from('ordens_servico').select('*').order('id', { ascending: true });
                 if (error) throw error;
                 dadosLocais = data || [];
                 renderizarPainel();
@@ -150,7 +152,6 @@
             }
 
             dadosLocais.forEach(item => {
-                // BLINDAGEM TOTAL: Valores padrão seguros caso o registro do banco seja antigo ou incompleto
                 let info = { 
                     modelo: item.carro || 'Sem modelo', 
                     unidade: 'Tatuapé', 
@@ -160,7 +161,6 @@
                     data: '' 
                 };
                 
-                // Se o registro for do modelo novo composto por barras (||), quebra e organiza
                 if (item.carro && item.carro.toString().includes('||')) {
                     let partes = item.carro.split('||');
                     info.modelo = partes[0] || 'Sem modelo';
@@ -203,7 +203,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = Bradley = unidade;
+            unidadeFiltroAtual = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
@@ -246,9 +246,11 @@
                 const payload = { nome: placa, carro: stringCompactada };
 
                 if (idLimpo !== '') {
-                    await cliente.from('servicos').update(payload).eq('id', idLimpo);
+                    // CORREÇÃO: Apontando para ordens_servico
+                    await cliente.from('ordens_servico').update(payload).eq('id', idLimpo);
                 } else {
-                    await cliente.from('servicos').insert([payload]);
+                    // CORREÇÃO: Apontando para ordens_servico
+                    await cliente.from('ordens_servico').insert([payload]);
                 }
                 
                 fecharModal();
@@ -268,7 +270,8 @@
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
             
-            await cliente.from('servicos').update({ carro: novaString }).eq('id', id);
+            // CORREÇÃO: Apontando para ordens_servico
+            await cliente.from('ordens_servico').update({ carro: novaString }).eq('id', id);
             await carregarDados();
         }
 
@@ -276,7 +279,8 @@
             const cliente = conectarBanco();
             if (!cliente) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
-                await cliente.from('servicos').delete().eq('id', id);
+                // CORREÇÃO: Apontando para ordens_servico
+                await cliente.from('ordens_servico').delete().eq('id', id);
                 await carregarDados();
             }
         }
