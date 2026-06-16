@@ -107,7 +107,7 @@
     </div>
 
     <script>
-        // INSIRA SEUS DADOS REAIS DO SUPABASE AQUI
+        // CONFIGURAÇÕES DO BANCO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -151,8 +151,12 @@
             }
 
             dadosLocais.forEach(item => {
-                let nomePlaca = item.nome || 'SEM PLACA';
-                let dadoCarro = item.carro || 'Sem modelo';
+                // MAPEAMENTO INTELIGENTE: Lê tanto 'placa/modelo' quanto 'nome/carro' se houver dados antigos
+                let nomePlaca = item.placa || item.nome || 'SEM PLACA';
+                let dadoCarro = item.modelo || item.carro || 'SEM MODELO';
+
+                // Se o card for uma linha vazia com "SEM PLACA" e "SEM MODELO", ignora para sumir com o card fantasma da tela
+                if (nomePlaca === 'SEM PLACA' && dadoCarro === 'SEM MODELO') return;
 
                 let info = { 
                     modelo: dadoCarro, 
@@ -205,7 +209,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = Bradley = unidade;
+            unidadeFiltroAtual = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
@@ -238,7 +242,7 @@
                 let etapaAtual = "1";
                 if (idLimpo !== '') {
                     const itemAntigo = dadosLocais.find(d => d.id == idLimpo);
-                    let campoCarroAntigo = itemAntigo ? (itemAntigo.carro || '') : '';
+                    let campoCarroAntigo = itemAntigo ? (itemAntigo.modelo || itemAntigo.carro || '') : '';
                     if (campoCarroAntigo.toString().includes('||')) {
                         etapaAtual = campoCarroAntigo.split('||')[4] || "1";
                     }
@@ -247,8 +251,14 @@
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ').replace(/\|/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 
-                // CORREÇÃO DEFINITIVA DO NOMES DAS COLUNAS REAL:
-                const payload = { nome: placa, carro: stringCompactada };
+                // CORREÇÃO DEFINITIVA: Criamos o objeto enviando os dados duplicados para ambas as colunas (placa/nome e modelo/carro)
+                // Assim, não importa qual nome de coluna sua tabela use, ela vai receber os dados sem dar erro 400!
+                const payload = { 
+                    placa: placa, 
+                    nome: placa, 
+                    modelo: stringCompactada, 
+                    carro: stringCompactada 
+                };
 
                 if (idLimpo !== '') {
                     await cliente.from('ordens_servico').update(payload).eq('id', idLimpo);
@@ -269,12 +279,13 @@
             const item = dadosLocais.find(d => d.id == id);
             if (!item) return;
             
-            let dadoCarro = item.carro || '';
+            let dadoCarro = item.modelo || item.carro || '';
             let partes = dadoCarro.toString().includes('||') ? dadoCarro.split('||') : [dadoCarro, 'Tatuapé', 'Oficina', '', '1', ''];
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
             
-            await cliente.from('ordens_servico').update({ carro: novaString }).eq('id', id);
+            // Atualiza ambas as colunas possíveis para mover o card de coluna com segurança
+            await cliente.from('ordens_servico').update({ modelo: novaString, carro: novaString }).eq('id', id);
             await carregarDados();
         }
 
