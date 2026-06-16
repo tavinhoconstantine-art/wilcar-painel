@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- IMPORTAÇÃO CORRIGIDA: Versão estável que aceita a sintaxe padrão do painel -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -18,7 +16,6 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
-    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -29,7 +26,6 @@
         </button>
     </header>
 
-    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
@@ -45,7 +41,6 @@
         </div>
     </div>
 
-    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
@@ -61,7 +56,6 @@
         </div>
     </div>
 
-    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -113,7 +107,6 @@
     </div>
 
     <script>
-        // COLOQUE SEUS ACESSOS REAIS AQUI
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -121,7 +114,6 @@
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
-        // Conexão direta e robusta sem travas ocultas
         function conectarBanco() {
             if (supabaseClient) return supabaseClient;
             if (window.supabase && window.supabase.createClient) {
@@ -145,7 +137,7 @@
         }
 
         function formatarDataBR(dataIso) {
-            if (!dataIso) return 'N/A';
+            if (!dataIso || dataIso === 'undefined') return 'N/A';
             const partes = dataIso.split('-');
             if (partes.length !== 3) return dataIso;
             return partes[2] + '/' + partes[1] + '/' + partes[0];
@@ -158,11 +150,20 @@
             }
 
             dadosLocais.forEach(item => {
-                let info = { modelo: item.carro || 'Sem modelo', unidade: 'Tatuapé', responsavel: 'Oficina', pecas: 'Não informadas', etapa: 1, data: '' };
+                // BLINDAGEM TOTAL: Valores padrão seguros caso o registro do banco seja antigo ou incompleto
+                let info = { 
+                    modelo: item.carro || 'Sem modelo', 
+                    unidade: 'Tatuapé', 
+                    responsavel: 'Oficina', 
+                    pecas: 'Não informadas', 
+                    etapa: 1, 
+                    data: '' 
+                };
                 
-                if (item.carro && item.carro.includes('||')) {
+                // Se o registro for do modelo novo composto por barras (||), quebra e organiza
+                if (item.carro && item.carro.toString().includes('||')) {
                     let partes = item.carro.split('||');
-                    info.modelo = partes[0] || item.carro;
+                    info.modelo = partes[0] || 'Sem modelo';
                     info.unidade = partes[1] || 'Tatuapé';
                     info.responsavel = partes[2] || 'Oficina';
                     info.pecas = partes[3] || 'Não informadas';
@@ -177,8 +178,8 @@
                     let botaoVoltar = info.etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>';
                     let botaoAvancar = info.etapa < 3 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>';
 
-                    let modeloLimpo = (info.modelo || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
-                    let pecasLimpas = (info.pecas || '').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
+                    let modeloLimpo = (info.modelo || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    let pecasLimpas = (info.pecas || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
 
                     let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -202,7 +203,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unidade;
+            unidadeFiltroAtual = Bradley = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
@@ -214,10 +215,7 @@
 
         async function salvarOS() {
             const cliente = conectarBanco();
-            if (!cliente) {
-                alert("Erro crítico: A biblioteca do Supabase falhou ao carregar!");
-                return;
-            }
+            if (!cliente) return;
             
             try {
                 const idCampo = document.getElementById('os-id') ? document.getElementById('os-id').value : '';
@@ -238,7 +236,7 @@
                 let etapaAtual = "1";
                 if (idLimpo !== '') {
                     const itemAntigo = dadosLocais.find(d => d.id == idLimpo);
-                    if (itemAntigo && itemAntigo.carro && itemAntigo.carro.includes('||')) {
+                    if (itemAntigo && itemAntigo.carro && itemAntigo.carro.toString().includes('||')) {
                         etapaAtual = itemAntigo.carro.split('||')[4] || "1";
                     }
                 }
@@ -266,7 +264,7 @@
             const item = dadosLocais.find(d => d.id == id);
             if (!item) return;
             
-            let partes = (item.carro && item.carro.includes('||')) ? item.carro.split('||') : [item.carro, 'Tatuapé', 'Oficina', '', '1', ''];
+            let partes = (item.carro && item.carro.toString().includes('||')) ? item.carro.split('||') : [item.carro, 'Tatuapé', 'Oficina', '', '1', ''];
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
             
