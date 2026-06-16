@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca Oficial do Supabase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -16,6 +18,7 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
+    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -26,6 +29,7 @@
         </button>
     </header>
 
+    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
@@ -41,21 +45,26 @@
         </div>
     </div>
 
+    <!-- Kanban Board (3 colunas integradas com a tabela servicos) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Coluna 1 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
             <div id="col-1" class="space-y-4 min-h-[500px]"></div>
         </div>
+        <!-- Coluna 2 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito / Montagem</h2>
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
+        <!-- Coluna 3 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
         </div>
     </div>
 
+    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -106,20 +115,22 @@
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // CORREÇÃO DA LINHA DO PRINT: Inicializando com 'Supabase' maiúsculo conforme manda a biblioteca CDN
+        const supabase = window.Supabase ? window.Supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
         
-        // Variável global para guardar a unidade selecionada no filtro
         let unidadeFiltroAtual = "TODAS";
-        // Variável para guardar os dados vindos do banco
         let dadosLocais = [];
 
         async function carregarDados() {
-            if (!supabase) return;
+            if (!supabase) {
+                console.error("Conexão com o Supabase não foi inicializada.");
+                return;
+            }
             try {
                 const { data, error } = await supabase.from('servicos').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
-                dadosLocais = data; // Salva uma cópia local para filtrar rápido na tela
+                dadosLocais = data;
                 renderizarPainel();
             } catch (err) {
                 console.error(err);
@@ -127,7 +138,6 @@
         }
 
         function renderizarPainel() {
-            // Limpa as colunas do Kanban antes de desenhar
             for (let i = 1; i <= 3; i++) {
                 const col = document.getElementById('col-' + i);
                 if (col) col.innerHTML = '';
@@ -145,7 +155,6 @@
                     info.etapa = parseInt(partes[4] || '1');
                 }
 
-                // APLICAÇÃO DO FILTRO: Se não for "TODAS" e a unidade do carro for diferente da selecionada, ignora e pula para o próximo
                 if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) {
                     return;
                 }
@@ -180,11 +189,9 @@
             });
         }
 
-        // Função chamada ao clicar nos botões de filtro
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unity = unidade;
+            unidadeFiltroAtual = unidade;
             
-            // Ajusta o visual dos botões de filtro (estilo brutalista ativo/inativo)
             const botoes = {
                 'TODAS': document.getElementById('btn-filtro-todas'),
                 'Tatuapé': document.getElementById('btn-filtro-tatuape'),
@@ -204,6 +211,7 @@
         }
 
         async function salvarOS() {
+            if (!supabase) return;
             try {
                 const id = document.getElementById('os-id').value;
                 const placa = document.getElementById('placa').value;
@@ -247,6 +255,7 @@
         }
 
         async function mudarEtapa(id, novaEtapa) {
+            if (!supabase) return;
             const item = dadosLocais.find(d => d.id == id);
             if (!item || !item.carro.includes('||')) return;
             let partes = item.carro.split('||');
@@ -257,6 +266,7 @@
         }
 
         async function deletarOS(id) {
+            if (!supabase) return;
             if (confirm("Deseja mesmo excluir este registro de peças?")) {
                 await supabase.from('servicos').delete().eq('id', id);
                 carregarDados();
