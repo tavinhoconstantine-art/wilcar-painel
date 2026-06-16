@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca estável do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -16,6 +18,7 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
+    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -26,21 +29,17 @@
         </button>
     </header>
 
+    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
-            <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">
-                💥 Ver Todas
-            </button>
-            <button onclick="filtrarPorUnidade('Tatuapé')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">
-                🏢 Tatuapé
-            </button>
-            <button onclick="filtrarPorUnidade('Leopoldina')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">
-                🏭 Leopoldina
-            </button>
+            <button onclick="filtrarPorUnidade('TODAS')" id="btn-filtro-todas" class="bg-black text-white font-black uppercase px-4 py-2 brutal-border text-xs tracking-wider">💥 Ver Todas</button>
+            <button onclick="filtrarPorUnidade('Tatuapé')" id="btn-filtro-tatuape" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏢 Tatuapé</button>
+            <button onclick="filtrarPorUnidade('Leopoldina')" id="btn-filtro-leopoldina" class="bg-white text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs tracking-wider">🏭 Leopoldina</button>
         </div>
     </div>
 
+    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
@@ -56,6 +55,7 @@
         </div>
     </div>
 
+    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
@@ -107,7 +107,6 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES DO BANCO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -151,57 +150,61 @@
             }
 
             dadosLocais.forEach(item => {
-                // MAPEAMENTO INTELIGENTE: Lê tanto 'placa/modelo' quanto 'nome/carro' se houver dados antigos
-                let nomePlaca = item.placa || item.nome || 'SEM PLACA';
-                let dadoCarro = item.modelo || item.carro || 'SEM MODELO';
+                let nomePlaca = item.placa || 'SEM PLACA';
+                let dadoCarro = item.modelo || 'SEM MODELO';
 
-                // Se o card for uma linha vazia com "SEM PLACA" e "SEM MODELO", ignora para sumir com o card fantasma da tela
-                if (nomePlaca === 'SEM PLACA' && dadoCarro === 'SEM MODELO') return;
+                let etapaNum = 1;
+                if (item.status_fluxo) {
+                    let st = item.status_fluxo.toString();
+                    if (st === '1' || st === '2' || st === '3') etapaNum = parseInt(st);
+                }
+
+                // Tenta puxar a data da coluna certa, senão deixa vazio
+                let dataExibicao = item.data_entrada || '';
 
                 let info = { 
                     modelo: dadoCarro, 
-                    unidade: 'Tatuapé', 
+                    unidade: item.unidade_id || 'Tatuapé', 
                     responsavel: 'Oficina', 
-                    pecas: 'Não informadas', 
-                    etapa: 1, 
-                    data: '' 
+                    pecas: 'Ver no sistema', 
+                    etapa: etapaNum, 
+                    data: dataExibicao 
                 };
                 
+                // Suporte caso ainda existam dados compactados de testes anteriores
                 if (dadoCarro && dadoCarro.toString().includes('||')) {
                     let partes = dadoCarro.split('||');
                     info.modelo = partes[0] || 'Sem modelo';
-                    info.unidade = partes[1] || 'Tatuapé';
+                    info.unidade = partes[1] || info.unidade;
                     info.responsavel = partes[2] || 'Oficina';
                     info.pecas = partes[3] || 'Não informadas';
-                    info.etapa = parseInt(partes[4] || '1');
-                    info.data = partes[5] || '';
+                    info.data = partes[5] || info.data;
                 }
 
                 if (unidadeFiltroAtual !== "TODAS" && info.unidade !== unidadeFiltroAtual) return;
 
                 const col = document.getElementById('col-' + info.etapa);
                 if (col) {
-                    let botaoVoltar = info.etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>';
-                    let botaoAvancar = info.etapa < 3 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>';
-
-                    let modeloLimpo = (info.modelo || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"');
-                    let pecasLimpas = (info.pecas || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
+                    let mapModelo = (info.modelo || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    let mapPecas = (info.pecas || '').toString().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '');
 
                     let htmlCard = `<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">
                         <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${modeloLimpo}', '${info.unidade}', '${info.responsavel}', '${pecasLimpas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
+                            <button type="button" onclick="editarOS(${item.id}, '${nomePlaca}', '${mapModelo}', '${info.unidade}', '${info.responsavel}', '${mapPecas}', '${info.data}')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>
                             <button type="button" onclick="deletarOS(${item.id})" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>
                         </div>
                         <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">${nomePlaca}</div>
                         <h4 class="font-black text-sm uppercase">${info.modelo}</h4>
                         <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
-                        <p class="text-xs font-bold text-gray-700">📦 Peças por: <span class="bg-[#FFDE4D] px-1">${info.responsavel}</span></p>
                         <div class="mt-2 pt-2 border-t border-dashed border-black">
-                            <p class="text-[11px] font-bold text-gray-600 uppercase">Peças:</p>
-                            <p class="text-xs font-medium whitespace-pre-line bg-white p-1.5 brutal-border mt-0.5">${info.pecas}</p>
+                            <p class="text-[11px] font-bold text-gray-600 uppercase">Observações / Peças:</p>
+                            <p class="text-xs font-medium bg-white p-1.5 brutal-border mt-0.5 whitespace-pre-line">${info.pecas}</p>
                         </div>
-                        <div class="flex justify-between mt-3 pt-2 border-t border-black">${botaoVoltar}${botaoAvancar}</div>
+                        <div class="flex justify-between mt-3 pt-2 border-t border-black">
+                            ${info.etapa > 1 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa - 1})" class="text-[10px] font-black bg-white px-1 brutal-border brutal-shadow-sm">&lt; Voltar</button>` : '<div></div>'}
+                            ${info.etapa < 3 ? `<button type="button" onclick="mudarEtapa(${item.id}, ${info.etapa + 1})" class="text-[10px] font-black bg-black text-white px-1 brutal-border brutal-shadow-sm">Avançar &gt;</button>` : '<div></div>'}
+                        </div>
                     </div>`;
                     col.innerHTML += htmlCard;
                 }
@@ -229,10 +232,9 @@
 
                 const placa = document.getElementById('placa') ? document.getElementById('placa').value.trim() : '';
                 const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
-                const sinistro = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
-                const status_fluxo = document.getElementById('responsavel') ? document.getElementById('responsavel').value : 'Oficina';
-                const unidade_id = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
-                const data_entrada = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
+                const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
+                const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
+                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
 
                 if (!placa || !modelo) {
                     alert("Por favor, preencha a Placa e o Modelo do Veículo!");
@@ -242,51 +244,55 @@
                 let etapaAtual = "1";
                 if (idLimpo !== '') {
                     const itemAntigo = dadosLocais.find(d => d.id == idLimpo);
-                    let campoCarroAntigo = itemAntigo ? (itemAntigo.modelo || itemAntigo.carro || '') : '';
-                    if (campoCarroAntigo.toString().includes('||')) {
-                        etapaAtual = campoCarroAntigo.split('||')[4] || "1";
+                    if (itemAntigo && itemAntigo.status_fluxo) {
+                        etapaAtual = itemAntigo.status_fluxo.toString();
                     }
                 }
 
-                const pecasNormalizadas = pecas.replace(/\n/g, ' ').replace(/\|/g, ' ');
-                const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
-                
-                // CORREÇÃO DEFINITIVA: Criamos o objeto enviando os dados duplicados para ambas as colunas (placa/nome e modelo/carro)
-                // Assim, não importa qual nome de coluna sua tabela use, ela vai receber os dados sem dar erro 400!
+                // MAPEAMENTO REAL DA SUA TABELA: Sem misturar texto com barras, cada valor vai pro seu respectivo campo
                 const payload = { 
                     placa: placa, 
-                    nome: placa, 
-                    modelo: stringCompactada, 
-                    carro: stringCompactada 
+                    modelo: modelo,
+                    status_fluxo: etapaAtual,
+                    unidade_id: unidade,
+                    data_entrada: dataDemanda || null
                 };
 
+                let err = null;
                 if (idLimpo !== '') {
-                    await cliente.from('ordens_servico').update(payload).eq('id', idLimpo);
+                    let { error } = await cliente.from('ordens_servico').update(payload).eq('id', idLimpo);
+                    err = error;
                 } else {
-                    await cliente.from('ordens_servico').insert([payload]);
+                    let { error } = await cliente.from('ordens_servico').insert([payload]);
+                    err = error;
+                }
+                
+                if (err) {
+                    alert("Erro do Supabase ao Inserir/Atualizar: " + err.message);
+                    return;
                 }
                 
                 fecharModal();
                 await carregarDados();
             } catch (err) {
-                console.error("Erro interno ao tentar salvar:", err);
+                console.error("Erro interno ao salvar:", err);
             }
         }
 
         async function mudarEtapa(id, novaEtapa) {
             const cliente = conectarBanco();
             if (!cliente) return;
-            const item = dadosLocais.find(d => d.id == id);
-            if (!item) return;
             
-            let dadoCarro = item.modelo || item.carro || '';
-            let partes = dadoCarro.toString().includes('||') ? dadoCarro.split('||') : [dadoCarro, 'Tatuapé', 'Oficina', '', '1', ''];
-            const dataSalva = partes[5] || '';
-            const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
-            
-            // Atualiza ambas as colunas possíveis para mover o card de coluna com segurança
-            await cliente.from('ordens_servico').update({ modelo: novaString, carro: novaString }).eq('id', id);
-            await carregarDados();
+            try {
+                const { error } = await cliente.from('ordens_servico').update({ 
+                    status_fluxo: novaEtapa.toString() 
+                }).eq('id', id);
+                
+                if (error) throw error;
+                await carregarDados();
+            } catch (e) {
+                console.error("Erro ao mudar etapa:", e);
+            }
         }
 
         async function deletarOS(id) {
@@ -317,7 +323,6 @@
             if (document.getElementById('placa')) document.getElementById('placa').value = placa;
             if (document.getElementById('modelo')) document.getElementById('modelo').value = modelo;
             if (document.getElementById('unidade')) document.getElementById('unidade').value = unidade;
-            if (document.getElementById('responsavel')) document.getElementById('responsavel').value = responsavel;
             if (document.getElementById('pecas')) document.getElementById('pecas').value = pecas;
             if (dataSalva && dataSalva !== 'undefined' && document.getElementById('data_demanda')) {
                 document.getElementById('data_demanda').value = dataSalva;
