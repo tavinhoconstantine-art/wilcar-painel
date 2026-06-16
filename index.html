@@ -151,9 +151,8 @@
             }
 
             dadosLocais.forEach(item => {
-                // Mapeamento dinâmico inteligente para ler colunas antigas ou compostas
-                let nomePlaca = item.nome || item.placa || 'SEM PLACA';
-                let dadoCarro = item.carro || item.modelo || 'Sem modelo';
+                let nomePlaca = item.nome || 'SEM PLACA';
+                let dadoCarro = item.carro || 'Sem modelo';
 
                 let info = { 
                     modelo: dadoCarro, 
@@ -206,7 +205,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unidade;
+            unidadeFiltroAtual = Bradley = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
@@ -239,7 +238,7 @@
                 let etapaAtual = "1";
                 if (idLimpo !== '') {
                     const itemAntigo = dadosLocais.find(d => d.id == idLimpo);
-                    let campoCarroAntigo = itemAntigo ? (itemAntigo.carro || itemAntigo.modelo || '') : '';
+                    let campoCarroAntigo = itemAntigo ? (itemAntigo.carro || '') : '';
                     if (campoCarroAntigo.toString().includes('||')) {
                         etapaAtual = campoCarroAntigo.split('||')[4] || "1";
                     }
@@ -247,36 +246,16 @@
 
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ').replace(/\|/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
-
-                // SISTEMA ANTI-TRAVAMENTO DE COLUNAS: Cria os dois formatos possíveis de envio
-                const payloadFormatoA = { nome: placa, carro: stringCompactada };
-                const payloadFormatoB = { placa: placa, modelo: stringCompactada };
-
-                let resError = null;
+                
+                // CORREÇÃO DEFINITIVA DO NOMES DAS COLUNAS REAL:
+                const payload = { nome: placa, carro: stringCompactada };
 
                 if (idLimpo !== '') {
-                    // Tenta atualizar no Formato A
-                    let { error: errA } = await cliente.from('ordens_servico').update(payloadFormatoA).eq('id', idLimpo);
-                    if (errA) {
-                        // Se falhar por nome de coluna, tenta no Formato B
-                        let { error: errB } = await cliente.from('ordens_servico').update(payloadFormatoB).eq('id', idLimpo);
-                        resError = errB;
-                    }
+                    await cliente.from('ordens_servico').update(payload).eq('id', idLimpo);
                 } else {
-                    // Tenta inserir no Formato A
-                    let { error: errA } = await cliente.from('ordens_servico').insert([payloadFormatoA]);
-                    if (errA) {
-                        // Se falhar por nome de coluna, tenta no Formato B
-                        let { error: errB } = await cliente.from('ordens_servico').insert([payloadFormatoB]);
-                        resError = errB;
-                    }
+                    await cliente.from('ordens_servico').insert([payload]);
                 }
                 
-                if (resError) {
-                    alert("Erro retornado pelo banco do Supabase: " + (resError.message || JSON.stringify(resError)));
-                    return;
-                }
-
                 fecharModal();
                 await carregarDados();
             } catch (err) {
@@ -290,17 +269,12 @@
             const item = dadosLocais.find(d => d.id == id);
             if (!item) return;
             
-            let dadoCarro = item.carro || item.modelo || '';
+            let dadoCarro = item.carro || '';
             let partes = dadoCarro.toString().includes('||') ? dadoCarro.split('||') : [dadoCarro, 'Tatuapé', 'Oficina', '', '1', ''];
             const dataSalva = partes[5] || '';
             const novaString = partes[0] + "||" + (partes[1] || 'Tatuapé') + "||" + (partes[2] || 'Oficina') + "||" + (partes[3] || '') + "||" + novaEtapa + "||" + dataSalva;
             
-            // Faz o update dinâmico baseado na coluna que existir
-            if (item.hasOwnProperty('carro')) {
-                await cliente.from('ordens_servico').update({ carro: novaString }).eq('id', id);
-            } else {
-                await cliente.from('ordens_servico').update({ modelo: novaString }).eq('id', id);
-            }
+            await cliente.from('ordens_servico').update({ carro: novaString }).eq('id', id);
             await carregarDados();
         }
 
