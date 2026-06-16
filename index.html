@@ -61,31 +61,30 @@
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
             <h3 id="modal-titulo" class="text-xl font-black uppercase mb-4 bg-[#FFDE4D] p-2 brutal-border inline-block">Nova O.S. Peças</h3>
             
-            <form id="form-os" onsubmit="salvarOS(event)" class="space-y-4">
+            <form id="form-os" onsubmit="return false;" class="space-y-4">
                 <input type="hidden" id="os-id">
-                <input type="hidden" id="os-etapa-atual" value="1">
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Placa do Veículo</label>
-                        <input type="text" id="placa" required class="w-full p-2 brutal-border font-bold uppercase text-sm focus:outline-none bg-[#F9F9F9]">
+                        <input type="text" id="placa" class="w-full p-2 brutal-border font-bold uppercase text-sm focus:outline-none bg-[#F9F9F9]">
                     </div>
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Modelo / Veículo</label>
-                        <input type="text" id="modelo" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
+                        <input type="text" id="modelo" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Unidade Wilcar</label>
-                        <select id="unidade" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
+                        <select id="unidade" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
                             <option value="Tatuapé">Tatuapé</option>
                             <option value="Leopoldina">Leopoldina</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-black uppercase mb-1">Responsável pelas Peças</label>
-                        <select id="responsavel" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
+                        <select id="responsavel" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
                             <option value="Oficina">Oficina (Wilcar)</option>
                             <option value="Movida">Movida</option>
                         </select>
@@ -93,15 +92,15 @@
                 </div>
                 <div>
                     <label class="block text-xs font-black uppercase mb-1">Data de Abertura</label>
-                    <input type="date" id="data_demanda" required class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
+                    <input type="date" id="data_demanda" class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9]">
                 </div>
                 <div>
                     <label class="block text-xs font-black uppercase mb-1">Lista de Peças Necessárias</label>
-                    <textarea id="pecas" rows="4" required placeholder="Ex: Capô, Farol Direito..." class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9] resize-none"></textarea>
+                    <textarea id="pecas" rows="4" placeholder="Ex: Capô, Farol Direito..." class="w-full p-2 brutal-border font-bold text-sm focus:outline-none bg-[#F9F9F9] resize-none"></textarea>
                 </div>
                 <div class="flex justify-end space-x-4 pt-2">
                     <button type="button" onclick="fecharModal()" class="bg-[#FF6B6B] text-white font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Cancelar</button>
-                    <button type="submit" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
+                    <button type="button" onclick="salvarOS()" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
                 </div>
             </form>
         </div>
@@ -111,6 +110,7 @@
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
+        let unity = "TODAS"; 
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
@@ -178,7 +178,7 @@
                     let htmlCard = '';
                     htmlCard += '<div class="bg-[#F9F9F9] brutal-border brutal-shadow-sm p-3 relative group">';
                     htmlCard += '  <div class="absolute top-2 right-2 space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">';
-                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\', ' + info.etapa + ')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
+                    htmlCard += '    <button type="button" onclick="editarOS(' + item.id + ', \'' + item.nome + '\', \'' + modeloLimpo + '\', \'' + info.unidade + '\', \'' + info.responsavel + '\', \'' + pecasLimpas + '\', \'' + info.data + '\')" class="text-xs font-black bg-[#FECA57] px-1.5 py-0.5 brutal-border">E</button>';
                     htmlCard += '    <button type="button" onclick="deletarOS(' + item.id + ')" class="text-xs font-black bg-[#FF6B6B] text-white px-1.5 py-0.5 brutal-border">X</button>';
                     htmlCard += '  </div>';
                     htmlCard += '  <div class="text-xs font-black bg-black text-white px-1.5 py-0.5 inline-block mb-2">' + (item.nome || 'SEM PLACA') + '</div>';
@@ -202,7 +202,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unidade;
+            unidadeFiltroAtual = unity = unidade;
             
             const botoes = {
                 'TODAS': document.getElementById('btn-filtro-todas'),
@@ -222,9 +222,7 @@
             renderizarPainel();
         }
 
-        async function salvarOS(e) {
-            if (e) e.preventDefault(); 
-            
+        async function salvarOS() {
             const cliente = obterClienteBanco();
             if (!cliente) return;
             
@@ -236,17 +234,29 @@
                 const responsavel = document.getElementById('responsavel').value;
                 const pecas = document.getElementById('pecas').value;
                 const dataDemanda = document.getElementById('data_demanda').value;
-                const etapaAtual = document.getElementById('os-etapa-atual').value || "1";
 
-                const pecasNormalizadas = pecas.replace(/\n/g, ' ');
+                if (!placa || !modelo || !dataDemanda) {
+                    alert("Por favor, preencha todos os campos obrigatórios (Placa, Modelo e Data)!");
+                    return;
+                }
+
+                // Lógica de etapa direta e infalível
+                let etapaAtual = "1";
+                if (id) {
+                    const itemAntigo = dadosLocais.find(d => d.id == id);
+                    if (itemAntigo && itemAntigo.carro && itemAntigo.carro.includes('||')) {
+                        etapaAtual = itemAntigo.carro.split('||')[4] || "1";
+                    }
+                }
+
+                const pecasNormalizadas = pecas.replace(/\n/g, ' ').replace(/\|/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
                 if (id) {
-                    // Edição (mantém o id existente)
                     await cliente.from('servicos').update(payload).eq('id', id);
                 } else {
-                    // CORREÇÃO FINAL: NÃO PASSAMOS O ID. Deixamos o Supabase criar o número sozinho!
+                    // Deixa o Supabase auto-incrementar o ID sozinho
                     await cliente.from('servicos').insert([payload]);
                 }
                 fecharModal();
@@ -281,7 +291,6 @@
         function abrirModal() {
             document.getElementById('form-os').reset();
             document.getElementById('os-id').value = '';
-            document.getElementById('os-etapa-atual').value = '1';
             document.getElementById('modal-titulo').innerText = 'Nova O.S. Peças';
             
             const hoje = new Date().toISOString().split('T')[0];
@@ -294,11 +303,10 @@
             document.getElementById('modal').classList.add('hidden');
         }
 
-        function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva, etapaSalva) {
+        function editarOS(id, placa, modelo, unidade, responsavel, pecas, dataSalva) {
             abrirModal();
             document.getElementById('modal-titulo').innerText = 'Editar Registro';
             document.getElementById('os-id').value = id;
-            document.getElementById('os-etapa-atual').value = etapaSalva || '1';
             document.getElementById('placa').value = placa;
             document.getElementById('modelo').value = modelo;
             document.getElementById('unidade').value = unidade;
