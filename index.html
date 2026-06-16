@@ -108,14 +108,12 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES FIXAS DO BANCO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
         let unidadeFiltroAtual = "TODAS";
         let dadosLocais = [];
 
-        // Função direta para pegar o cliente do Supabase sem risco de retornar nulo
         function obterClienteBanco() {
             if (window.supabase && window.supabase.createClient) {
                 return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -228,10 +226,7 @@
             if (e) e.preventDefault(); 
             
             const cliente = obterClienteBanco();
-            if (!cliente) {
-                alert("Erro grave: Não foi possível conectar com o Supabase!");
-                return;
-            }
+            if (!cliente) return;
             
             try {
                 const id = document.getElementById('os-id').value;
@@ -243,31 +238,21 @@
                 const dataDemanda = document.getElementById('data_demanda').value;
                 const etapaAtual = document.getElementById('os-etapa-atual').value || "1";
 
-                if (!placa || !modelo || !dataDemanda) {
-                    alert("Por favor, preencha todos os campos obrigatórios!");
-                    return;
-                }
-
                 const pecasNormalizadas = pecas.replace(/\n/g, ' ');
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecasNormalizadas + "||" + etapaAtual + "||" + dataDemanda;
                 const payload = { nome: placa, carro: stringCompactada };
 
                 if (id) {
+                    // Edição (mantém o id existente)
                     await cliente.from('servicos').update(payload).eq('id', id);
                 } else {
-                    const { data: maxData, error: maxError } = await cliente.from('servicos').select('id').order('id', { ascending: false }).limit(1);
-                    let proximoId = 1;
-                    if (!maxError && maxData && maxData.length > 0) {
-                        proximoId = parseInt(maxData[0].id) + 1;
-                    }
-                    payload.id = proximoId;
+                    // CORREÇÃO FINAL: NÃO PASSAMOS O ID. Deixamos o Supabase criar o número sozinho!
                     await cliente.from('servicos').insert([payload]);
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
                 console.error(err);
-                alert("Erro ao salvar dados: " + err.message);
             }
         }
 
