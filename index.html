@@ -159,25 +159,23 @@
                     if (st === '1' || st === '2' || st === '3') etapaNum = parseInt(st);
                 }
 
-                // Tenta puxar a data da coluna certa, senão deixa vazio
                 let dataExibicao = item.data_entrada || '';
 
                 let info = { 
                     modelo: dadoCarro, 
                     unidade: item.unidade_id || 'Tatuapé', 
                     responsavel: 'Oficina', 
-                    pecas: 'Ver no sistema', 
+                    pecas: item.sinistro || 'Não informadas', 
                     etapa: etapaNum, 
                     data: dataExibicao 
                 };
                 
-                // Suporte caso ainda existam dados compactados de testes anteriores
                 if (dadoCarro && dadoCarro.toString().includes('||')) {
                     let partes = dadoCarro.split('||');
                     info.modelo = partes[0] || 'Sem modelo';
                     info.unidade = partes[1] || info.unidade;
                     info.responsavel = partes[2] || 'Oficina';
-                    info.pecas = partes[3] || 'Não informadas';
+                    info.pecas = partes[3] || info.pecas;
                     info.data = partes[5] || info.data;
                 }
 
@@ -198,7 +196,7 @@
                         <p class="text-xs font-bold mt-1 text-gray-700">📅 Aberto em: <span class="bg-white px-1 border border-black font-black">${formatarDataBR(info.data)}</span></p>
                         <p class="text-xs font-bold mt-0.5 text-gray-700">📍 Unidade: <span class="underline">${info.unidade}</span></p>
                         <div class="mt-2 pt-2 border-t border-dashed border-black">
-                            <p class="text-[11px] font-bold text-gray-600 uppercase">Observações / Peças:</p>
+                            <p class="text-[11px] font-bold text-gray-600 uppercase">Lista de Peças:</p>
                             <p class="text-xs font-medium bg-white p-1.5 brutal-border mt-0.5 whitespace-pre-line">${info.pecas}</p>
                         </div>
                         <div class="flex justify-between mt-3 pt-2 border-t border-black">
@@ -212,7 +210,7 @@
         }
 
         function filtrarPorUnidade(unidade) {
-            unidadeFiltroAtual = unidade;
+            unidadeFiltroAtual = Bradley = unidade;
             const botoes = { 'TODAS': document.getElementById('btn-filtro-todas'), 'Tatuapé': document.getElementById('btn-filtro-tatuape'), 'Leopoldina': document.getElementById('btn-filtro-leopoldina') };
             for (let chave in botoes) {
                 if (botoes[chave]) {
@@ -234,7 +232,7 @@
                 const modelo = document.getElementById('modelo') ? document.getElementById('modelo').value.trim() : '';
                 const unidade = document.getElementById('unidade') ? document.getElementById('unidade').value : 'Tatuapé';
                 const dataDemanda = document.getElementById('data_demanda') ? document.getElementById('data_demanda').value : '';
-                const pecas = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
+                const pecasText = document.getElementById('pecas') ? document.getElementById('pecas').value.trim() : '';
 
                 if (!placa || !modelo) {
                     alert("Por favor, preencha a Placa e o Modelo do Veículo!");
@@ -249,13 +247,14 @@
                     }
                 }
 
-                // MAPEAMENTO REAL DA SUA TABELA: Sem misturar texto com barras, cada valor vai pro seu respectivo campo
+                // CORREÇÃO: Enviando a lista de peças diretamente para a coluna 'sinistro' de texto sem usar o replace defeituoso
                 const payload = { 
                     placa: placa, 
                     modelo: modelo,
                     status_fluxo: etapaAtual,
                     unidade_id: unidade,
-                    data_entrada: dataDemanda || null
+                    data_entrada: dataDemanda || null,
+                    sinistro: pecasText
                 };
 
                 let err = null;
@@ -268,7 +267,7 @@
                 }
                 
                 if (err) {
-                    alert("Erro do Supabase ao Inserir/Atualizar: " + err.message);
+                    alert("Erro do Supabase: " + err.message);
                     return;
                 }
                 
@@ -282,12 +281,10 @@
         async function mudarEtapa(id, novaEtapa) {
             const cliente = conectarBanco();
             if (!cliente) return;
-            
             try {
                 const { error } = await cliente.from('ordens_servico').update({ 
                     status_fluxo: novaEtapa.toString() 
                 }).eq('id', id);
-                
                 if (error) throw error;
                 await carregarDados();
             } catch (e) {
