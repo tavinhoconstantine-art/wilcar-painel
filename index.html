@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wilcar - Controle de Peças</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca Oficial do Supabase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
         /* Estilo Brutalismo */
@@ -18,7 +16,6 @@
 </head>
 <body class="bg-[#F0F0F0] text-black font-mono min-h-screen p-6">
 
-    <!-- Header -->
     <header class="bg-[#FFDE4D] brutal-border brutal-shadow p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-black uppercase tracking-wider">Wilcar Funilaria</h1>
@@ -29,7 +26,6 @@
         </button>
     </header>
 
-    <!-- BARRA DE FILTROS -->
     <div class="bg-white brutal-border brutal-shadow p-4 mb-8 flex flex-col sm:flex-row items-center gap-4">
         <span class="font-black uppercase text-sm tracking-wider">📍 Filtrar Unidade:</span>
         <div class="flex flex-wrap gap-2">
@@ -45,32 +41,27 @@
         </div>
     </div>
 
-    <!-- Kanban Board -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Coluna 1 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF6B6B] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">1. Demandas de Peças</h2>
             <div id="col-1" class="space-y-4 min-h-[500px]"></div>
         </div>
-        <!-- Coluna 2 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#FF9F43] text-black font-black uppercase p-2 text-center brutal-border text-sm mb-4">2. Em Trânsito / Montagem</h2>
             <div id="col-2" class="space-y-4 min-h-[500px]"></div>
         </div>
-        <!-- Coluna 3 -->
         <div class="bg-white brutal-border brutal-shadow p-4">
             <h2 class="bg-[#1DD1A1] text-white font-black uppercase p-2 text-center brutal-border text-sm mb-4">3. Pronto / Liberado</h2>
             <div id="col-3" class="space-y-4 min-h-[500px]"></div>
         </div>
     </div>
 
-    <!-- Modal de Cadastro / Edição -->
     <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-[#FFF] brutal-border brutal-shadow w-full max-w-lg p-6 relative">
             <button type="button" onclick="fecharModal()" class="absolute top-4 right-4 font-black text-xl">X</button>
             <h3 id="modal-titulo" class="text-xl font-black uppercase mb-4 bg-[#FFDE4D] p-2 brutal-border inline-block">Nova O.S. Peças</h3>
             
-            <form id="form-os" onsubmit="return false;" class="space-y-4">
+            <form id="form-os" onsubmit="salvarOS(event)" class="space-y-4">
                 <input type="hidden" id="os-id">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -108,7 +99,7 @@
                 </div>
                 <div class="flex justify-end space-x-4 pt-2">
                     <button type="button" onclick="fecharModal()" class="bg-[#FF6B6B] text-white font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Cancelar</button>
-                    <button type="button" onclick="salvarOS()" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
+                    <button type="submit" class="bg-[#38E54D] text-black font-black uppercase px-4 py-2 brutal-border brutal-shadow-sm brutal-btn text-xs">Salvar Registro</button>
                 </div>
             </form>
         </div>
@@ -200,7 +191,6 @@
             });
         }
 
-        // CORREÇÃO DA LINHA DO FILTRO: Removido o termo fantasma "unity =" que travava a função
         function filtrarPorUnidade(unidade) {
             unidadeFiltroAtual = unidade;
             
@@ -222,8 +212,11 @@
             renderizarPainel();
         }
 
-        async function salvarOS() {
+        // AJUSTE AQUI: Recebe o evento (e) para bloquear o comportamento padrão do form
+        async function salvarOS(e) {
+            if (e) e.preventDefault(); 
             if (!supabase) return;
+            
             try {
                 const id = document.getElementById('os-id').value;
                 const placa = document.getElementById('placa').value;
