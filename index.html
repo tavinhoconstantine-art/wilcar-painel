@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.8/supabase.js"></script>
     <style>
-        /* Estilo Brutalismo */
         .brutal-border { border: 4px solid #000000; }
         .brutal-shadow { box-shadow: 5px 5px 0px 0px #000000; }
         .brutal-shadow-sm { box-shadow: 3px 3px 0px 0px #000000; }
@@ -88,6 +87,7 @@
     </div>
 
     <script>
+        // COLOQUE SEUS DADOS REAIS AQUI ABAIXO
         const SUPABASE_URL = "https://pboowzhhmcbxlmceiyps.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Pno1N5PLG_Hb8C3BOAIPDw_t7zz-lq4";
         
@@ -171,27 +171,22 @@
 
                 const stringCompactada = modelo + "||" + unidade + "||" + responsavel + "||" + pecas + "||" + etapaAtual;
 
-                const payload = {
-                    nome: placa,
-                    carro: stringCompactada
-                };
-
                 if (id) {
-                    await supabase.from('servicos').update(payload).eq('id', id);
+                    // Atualização simples
+                    await supabase.from('servicos').update({ nome: placa, carro: stringCompactada }).eq('id', id);
                 } else {
-                    const { data: maxData, error: maxError } = await supabase.from('servicos').select('id').order('id', { ascending: false }).limit(1);
-                    let proximoId = 1;
-                    if (!maxError && maxData && maxData.length > 0) {
-                        proximoId = parseInt(maxData[0].id) + 1;
-                    }
-                    
-                    payload.id = proximoId;
-                    await supabase.from('servicos').insert([payload]);
+                    // MUDANÇA CRUCIAL: Chamando a função RPC para burlar o erro de ID do banco
+                    const { error } = await supabase.rpc('inserir_servico_auto', {
+                        nome_veiculo: placa,
+                        carro_dados: stringCompactada
+                    });
+                    if (error) throw error;
                 }
                 fecharModal();
                 carregarDados();
             } catch (err) {
                 console.error(err);
+                alert("Erro ao salvar: " + err.message);
             }
         }
 
